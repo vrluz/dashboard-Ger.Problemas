@@ -4,263 +4,399 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Gestão de Problemas ITIL — Diagnóstico N3</title>
-<script src="https://cdn.tailwindcss.com/3.4.16/tailwind.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <style>
-  *{box-sizing:border-box;}
-  body{font-family:'Syne',sans-serif;background:#f8fafc;}
-  ::-webkit-scrollbar{width:6px;height:6px;}
-  ::-webkit-scrollbar-track{background:#f1f5f9;border-radius:99px;}
-  ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:99px;}
-  ::-webkit-scrollbar-thumb:hover{background:#94a3b8;}
-  .tab-scroll{overflow-x:auto;scrollbar-width:thin;}
-  .mono{font-family:'IBM Plex Mono',monospace;}
-  .view-section{display:none;}
-  .view-section.active{display:block;}
-  .tab-btn{white-space:nowrap;transition:all .2s;font-size:.72rem;padding:.3rem .65rem;border-radius:.75rem;font-weight:600;color:#475569;}
-  @media(min-width:640px){.tab-btn{font-size:.875rem;padding:.45rem 1rem;}}
-  .tab-btn.active{background:#312e81;color:#fff;box-shadow:0 4px 14px rgba(49,46,129,.35);}
-  .tab-btn:not(.active):hover{background:#e0e7ff;color:#3730a3;}
-  .dropdown-panel{display:none;z-index:50;}
-  .dropdown-panel.open{display:block;}
-  @media(max-width:500px){
-    .dropdown-panel{position:fixed!important;left:12px!important;right:12px!important;top:auto!important;max-width:none!important;width:auto!important;}
-  }
-  .bar-fill{transition:width .6s cubic-bezier(.4,0,.2,1);}
-  .kpi-card{transition:transform .2s,box-shadow .2s;}
-  .kpi-card:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.08);}
-  table thead th{position:sticky;top:0;z-index:10;}
-  .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;font-size:.68rem;font-weight:600;letter-spacing:.03em;}
-  input[type=date]{font-family:'Syne',sans-serif;}
-  @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
-  .fade-in{animation:fadeIn .35s ease both;}
+/* ─── RESET & BASE ─── */
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:#f8fafc;font-family:'Syne',sans-serif;color:#0f172a;}
+a{color:inherit;}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:#f1f5f9;border-radius:99px;}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:99px;}
+::-webkit-scrollbar-thumb:hover{background:#94a3b8;}
+
+/* ─── TYPOGRAPHY ─── */
+.mono{font-family:'IBM Plex Mono',monospace;}
+
+/* ─── LAYOUT ─── */
+.container{max-width:1600px;margin:0 auto;padding:16px;}
+@media(max-width:640px){.container{padding:10px;}}
+
+/* ─── HEADER ─── */
+.header{background:#1e1b4b;color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.25);}
+.header-logo{width:32px;height:32px;background:#818cf8;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.header-logo svg{width:18px;height:18px;color:#1e1b4b;}
+.header-title{font-size:.8rem;font-weight:700;margin-left:10px;}
+.header-sub{font-size:.65rem;color:#a5b4fc;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.08em;}
+.header-meta{text-align:right;font-size:.65rem;color:#a5b4fc;font-family:'IBM Plex Mono',monospace;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ─── CARD ─── */
+.card{background:#fff;border:1px solid #f1f5f9;border-radius:20px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+
+/* ─── EMPTY STATE ─── */
+#emptyState{display:flex;align-items:center;justify-content:center;min-height:80vh;padding:16px;}
+.empty-box{background:#fff;border:1px solid #f1f5f9;border-radius:24px;padding:48px 40px;max-width:440px;width:100%;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+@media(max-width:480px){.empty-box{padding:32px 20px;}}
+.empty-icon{width:64px;height:64px;background:#eef2ff;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
+.empty-icon svg{width:32px;height:32px;color:#4f46e5;}
+.empty-title{font-size:1.15rem;font-weight:700;margin-bottom:8px;}
+.empty-desc{font-size:.85rem;color:#64748b;margin-bottom:28px;line-height:1.6;}
+.upload-btn{display:inline-flex;align-items:center;gap:8px;background:#4f46e5;color:#fff;font-weight:600;font-size:.9rem;padding:12px 24px;border-radius:12px;cursor:pointer;border:none;transition:background .2s;}
+.upload-btn:hover{background:#4338ca;}
+.upload-btn svg{width:18px;height:18px;}
+.upload-hint{font-size:.7rem;color:#94a3b8;margin-top:12px;font-family:'IBM Plex Mono',monospace;}
+
+/* ─── DASHBOARD ─── */
+#dashMain{display:none;}
+
+/* ─── FILTER BAR ─── */
+.filter-bar{background:#fff;border:1px solid #f1f5f9;border-radius:18px;padding:14px 16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.filter-row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;}
+.filter-dates{display:flex;gap:8px;flex-wrap:wrap;}
+.filter-label{font-size:.7rem;font-weight:600;color:#64748b;display:block;margin-bottom:4px;}
+.date-input{border:1px solid #e2e8f0;border-radius:10px;padding:7px 10px;font-size:.8rem;font-family:'Syne',sans-serif;color:#334155;outline:none;transition:box-shadow .2s;}
+.date-input:focus{box-shadow:0 0 0 2px #c7d2fe;}
+.date-wrap{min-width:130px;flex:1;}
+.dropdowns-row{display:flex;flex-wrap:wrap;gap:6px;flex:1;}
+.clear-btn{display:flex;align-items:center;gap:6px;font-size:.8rem;font-weight:600;color:#64748b;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:7px 12px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.clear-btn:hover{color:#ef4444;border-color:#fca5a5;}
+
+/* ─── DROPDOWNS ─── */
+.dd-wrap{position:relative;}
+.dd-btn{display:flex;align-items:center;gap:6px;font-size:.75rem;font-weight:600;color:#334155;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:7px 10px;cursor:pointer;white-space:nowrap;transition:background .2s;}
+.dd-btn:hover{background:#f8fafc;}
+.dd-badge{background:#4f46e5;color:#fff;font-size:.6rem;font-weight:700;border-radius:99px;min-width:18px;height:18px;display:none;align-items:center;justify-content:center;padding:0 4px;font-family:'IBM Plex Mono',monospace;}
+.dd-badge.show{display:flex;}
+.dd-chevron{width:12px;height:12px;color:#94a3b8;transition:transform .2s;}
+.dd-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid #f1f5f9;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.12);width:240px;max-height:280px;overflow-y:auto;padding:8px;z-index:200;}
+.dd-panel.open{display:block;}
+@media(max-width:500px){
+  .dd-panel{position:fixed;left:10px;right:10px;width:auto;}
+}
+.dd-search{width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;font-size:.8rem;margin-bottom:4px;outline:none;font-family:'Syne',sans-serif;}
+.dd-search:focus{box-shadow:0 0 0 2px #c7d2fe;}
+.dd-clear-sel{width:100%;text-align:left;font-size:.72rem;font-weight:600;color:#f87171;background:none;border:none;padding:5px 8px;border-radius:6px;cursor:pointer;margin-bottom:2px;}
+.dd-clear-sel:hover{background:#fef2f2;}
+.dd-option{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;font-size:.8rem;color:#334155;}
+.dd-option:hover{background:#f1f5f9;}
+.dd-option.selected{background:#eef2ff;color:#4338ca;font-weight:600;}
+.dd-option input{accent-color:#4f46e5;flex-shrink:0;}
+
+/* ─── KPI GRID ─── */
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px;}
+@media(min-width:640px){.kpi-grid{grid-template-columns:repeat(3,1fr);}}
+@media(min-width:1200px){.kpi-grid{grid-template-columns:repeat(6,1fr);}}
+.kpi-card{background:#fff;border:1px solid #f1f5f9;border-radius:18px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.04);transition:transform .2s,box-shadow .2s;}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.08);}
+.kpi-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;}
+.kpi-icon{font-size:1.1rem;}
+.kpi-badge{font-size:.6rem;font-weight:700;padding:2px 8px;border-radius:99px;letter-spacing:.03em;}
+.kpi-value{font-size:1.5rem;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#0f172a;}
+@media(max-width:400px){.kpi-value{font-size:1.2rem;}}
+.kpi-sub{font-size:.68rem;color:#94a3b8;margin-top:2px;}
+
+/* ─── BADGE COLORS ─── */
+.badge-indigo{background:#eef2ff;color:#4338ca;}
+.badge-orange{background:#fff7ed;color:#c2410c;}
+.badge-purple{background:#faf5ff;color:#7e22ce;}
+.badge-emerald{background:#ecfdf5;color:#065f46;}
+.badge-amber{background:#fffbeb;color:#92400e;}
+.badge-rose{background:#fff1f2;color:#be123c;}
+.badge-red{background:#fef2f2;color:#b91c1c;}
+
+/* ─── TABS ─── */
+.tabs-wrap{background:#fff;border:1px solid #f1f5f9;border-radius:20px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.tabs-nav{display:flex;overflow-x:auto;border-bottom:1px solid #f1f5f9;padding:8px 8px 0;gap:4px;scrollbar-width:thin;}
+.tabs-nav::-webkit-scrollbar{height:4px;}
+.tab-btn{white-space:nowrap;font-size:.72rem;font-weight:600;color:#64748b;background:none;border:none;border-radius:10px 10px 0 0;padding:8px 14px;cursor:pointer;transition:all .2s;border-bottom:2px solid transparent;}
+@media(min-width:640px){.tab-btn{font-size:.85rem;padding:10px 18px;}}
+.tab-btn:hover{background:#f1f5f9;color:#334155;}
+.tab-btn.active{background:#1e1b4b;color:#fff;box-shadow:0 -2px 8px rgba(30,27,75,.2);}
+.tab-section{display:none;padding:16px;}
+@media(min-width:640px){.tab-section{padding:20px;}}
+.tab-section.active{display:block;}
+.sec-title{font-size:.95rem;font-weight:700;color:#1e293b;margin-bottom:14px;}
+
+/* ─── BADGE ─── */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;font-size:.68rem;font-weight:600;letter-spacing:.03em;}
+
+/* ─── BARS ─── */
+.bar-track{height:8px;background:#f1f5f9;border-radius:99px;overflow:hidden;margin-top:4px;}
+.bar-fill{height:100%;border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1);}
+
+/* ─── TABLES ─── */
+.tbl-wrap{overflow:auto;border-radius:14px;border:1px solid #f1f5f9;max-height:320px;}
+table{width:100%;border-collapse:collapse;font-size:.75rem;}
+th{background:#f8fafc;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:8px 12px;text-align:left;position:sticky;top:0;z-index:5;white-space:nowrap;}
+td{padding:8px 12px;color:#334155;border-bottom:1px solid #f8fafc;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafafa;}
+.tfoot-row td{background:#f8fafc;font-weight:700;color:#1e293b;position:sticky;bottom:0;}
+.num{font-family:'IBM Plex Mono',monospace;font-weight:600;}
+.num-hi{color:#4f46e5;}
+.num-lo{color:#cbd5e1;}
+
+/* ─── EXPORT BTN ─── */
+.exp-btn{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;font-weight:600;background:#f1f5f9;color:#475569;border:none;border-radius:10px;padding:6px 12px;cursor:pointer;transition:background .2s;}
+.exp-btn:hover{background:#e2e8f0;}
+.exp-btn svg{width:13px;height:13px;}
+
+/* ─── MATRIX HEADER ─── */
+.matrix-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.matrix-title{font-size:.82rem;font-weight:700;color:#1e293b;}
+
+/* ─── REINCIDENTES ─── */
+.reinc-item{background:#fff;border:1px solid #f1f5f9;border-radius:16px;padding:12px 14px;margin-bottom:8px;transition:box-shadow .2s;}
+.reinc-item:hover{box-shadow:0 4px 12px rgba(0,0,0,.06);}
+.reinc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;}
+.reinc-name{font-size:.78rem;font-weight:600;color:#1e293b;line-height:1.4;}
+.reinc-num{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.9rem;color:#0f172a;flex-shrink:0;}
+.reinc-meta{font-size:.68rem;color:#94a3b8;margin-top:4px;}
+
+/* ─── HEALTH PANEL ─── */
+.health-ring{transform:rotate(-90deg);display:block;}
+.ring-track{fill:none;stroke:#e2e8f0;stroke-width:10;}
+.ring-fill{fill:none;stroke-width:10;stroke-linecap:round;stroke-dasharray:251.2;transition:stroke-dashoffset .8s ease;}
+
+/* ─── ITIL DARK TABLE ─── */
+.itil-dark{background:#1e1b4b;border-radius:18px;padding:16px;margin-top:16px;}
+.itil-dark table{font-size:.73rem;}
+.itil-dark th{background:#2d2a5e;color:#a5b4fc;border-bottom:1px solid #3730a3;}
+.itil-dark td{color:#c7d2fe;border-bottom:1px solid #2d2a5e;}
+.itil-dark tr:hover td{background:#2d2a5e;}
+
+/* ─── GRID 2 COL ─── */
+.grid2{display:grid;grid-template-columns:1fr;gap:14px;}
+@media(min-width:768px){.grid2{grid-template-columns:1fr 1fr;}}
+
+/* ─── MISC ─── */
+.section-sep{height:16px;}
+.fade-in{animation:fadeIn .3s ease both;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.listing-wrap{overflow:auto;max-height:580px;border-radius:14px;border:1px solid #f1f5f9;}
+.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;}
 </style>
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-900">
+<body>
 
 <!-- HEADER -->
-<header class="bg-indigo-950 text-white px-4 py-3 flex items-center justify-between shadow-lg sticky top-0 z-40">
-  <div class="flex items-center gap-2.5 min-w-0">
-    <div class="w-8 h-8 rounded-xl bg-indigo-400 flex items-center justify-center flex-shrink-0">
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-950" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+<div class="header">
+  <div style="display:flex;align-items:center;gap:0;">
+    <div class="header-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="width:18px;height:18px;color:#1e1b4b"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
     </div>
-    <div class="min-w-0">
-      <div class="hidden sm:block text-xs text-indigo-300 font-medium tracking-widest uppercase mono">ITIL · Problem Management</div>
-      <div class="text-sm sm:text-base font-bold leading-tight">Diagnóstico Nível 3</div>
+    <div style="margin-left:10px;">
+      <div class="header-sub">ITIL · Problem Management</div>
+      <div class="header-title">Diagnóstico Nível 3</div>
     </div>
   </div>
-  <div id="headerMeta" class="text-right hidden ml-2 min-w-0 flex-shrink-0">
-    <div class="text-xs text-indigo-300 mono truncate max-w-[120px] sm:max-w-xs" id="headerFile">—</div>
-    <div class="text-xs text-indigo-300 mono" id="headerCount">0 tickets</div>
-  </div>
-</header>
-
-<!-- EMPTY STATE -->
-<div id="emptyState" class="flex flex-col items-center justify-center min-h-[80vh] px-4">
-  <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 sm:p-12 max-w-md w-full text-center fade-in">
-    <div class="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mx-auto mb-5">
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-    </div>
-    <h2 class="text-xl font-bold text-slate-900 mb-2">Nenhum dado carregado</h2>
-    <p class="text-slate-500 text-sm mb-8">Faça upload do CSV exportado do Freshdesk para iniciar a análise de problemas ITIL.</p>
-    <label class="cursor-pointer inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors shadow-md">
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-      Carregar CSV Freshdesk
-      <input type="file" accept=".csv" class="hidden" id="csvInput"/>
-    </label>
-    <p class="text-slate-400 text-xs mt-4 mono">Suporte a UTF-8 e ISO-8859-1</p>
+  <div id="headerMeta" style="display:none;text-align:right;">
+    <div class="header-meta" id="headerFile">—</div>
+    <div class="header-meta" id="headerCount" style="margin-top:2px;">0 tickets</div>
   </div>
 </div>
 
-<!-- DASHBOARD MAIN -->
-<div id="dashMain" class="hidden px-3 sm:px-5 py-3 sm:py-4 max-w-screen-2xl mx-auto space-y-3 sm:space-y-4">
-
-  <!-- FILTER BAR -->
-  <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-3 sm:p-4">
-    <div class="flex flex-col gap-3">
-      <div class="flex flex-wrap items-end gap-2">
-        <div class="flex-1 min-w-[130px]">
-          <label class="text-xs font-semibold text-slate-500 block mb-1">De</label>
-          <input type="date" id="fDateStart" class="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"/>
-        </div>
-        <div class="flex-1 min-w-[130px]">
-          <label class="text-xs font-semibold text-slate-500 block mb-1">Até</label>
-          <input type="date" id="fDateEnd" class="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"/>
-        </div>
-        <button id="btnClearFilters" class="flex-shrink-0 self-end flex items-center gap-1.5 text-sm text-slate-500 hover:text-red-500 border border-slate-200 hover:border-red-300 px-3 py-2 rounded-xl transition-colors font-medium">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-          <span class="hidden sm:inline">Limpar Filtros</span>
-        </button>
-      </div>
-      <div id="dropdownsContainer" class="flex flex-wrap gap-2"></div>
+<!-- EMPTY STATE -->
+<div id="emptyState">
+  <div class="empty-box fade-in">
+    <div class="empty-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" style="width:32px;height:32px;color:#4f46e5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
     </div>
+    <div class="empty-title">Nenhum dado carregado</div>
+    <div class="empty-desc">Faça upload do CSV exportado do Freshdesk para iniciar a análise de problemas ITIL.</div>
+    <label class="upload-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+      Carregar CSV Freshdesk
+      <input type="file" accept=".csv" id="csvInput" style="display:none;"/>
+    </label>
+    <div class="upload-hint">Suporte a UTF-8 e ISO-8859-1</div>
   </div>
+</div>
 
-  <!-- KPI CARDS -->
-  <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2 sm:gap-3" id="kpiGrid"></div>
+<!-- DASHBOARD -->
+<div id="dashMain">
+  <div class="container">
 
-  <!-- TABS WRAPPER -->
-  <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-    <div class="tab-scroll border-b border-slate-100">
-      <div class="flex p-2 gap-1" id="tabsNav"></div>
-    </div>
-
-    <!-- ABA 1: DASHBOARD -->
-    <div class="view-section active fade-in p-3 sm:p-5" id="sec-0">
-      <h2 class="text-base font-bold text-slate-800 mb-4">Eficácia de Resolução</h2>
-      <div class="flex justify-center">
-        <div class="relative w-full" style="max-width:540px;height:420px;">
-          <canvas id="chartDoughnut"></canvas>
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <div class="filter-row">
+        <div class="filter-dates">
+          <div class="date-wrap">
+            <label class="filter-label">De</label>
+            <input type="date" id="fDateStart" class="date-input" style="width:100%;"/>
+          </div>
+          <div class="date-wrap">
+            <label class="filter-label">Até</label>
+            <input type="date" id="fDateEnd" class="date-input" style="width:100%;"/>
+          </div>
         </div>
-      </div>
-    </div>
-
-    <!-- ABA 2: MATRIZES -->
-    <div class="view-section fade-in p-3 sm:p-5" id="sec-1">
-      <h2 class="text-base font-bold text-slate-800 mb-4">Matrizes de Tabulação Cruzada</h2>
-      <div class="space-y-6" id="matricesContainer"></div>
-    </div>
-
-    <!-- ABA 3: REINCIDENTES -->
-    <div class="view-section fade-in p-3 sm:p-5" id="sec-2">
-      <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-        <h2 class="text-base font-bold text-slate-800">Top 20 Assuntos Reincidentes</h2>
-        <button id="btnExportTop20" class="flex items-center gap-1.5 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-2 rounded-xl transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-          EXPORTAR TOP 20
+        <div class="dropdowns-row" id="dropdownsContainer"></div>
+        <button class="clear-btn" id="btnClearFilters">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          <span class="hidden-xs">Limpar Filtros</span>
         </button>
       </div>
-      <div id="reincidentesList" class="space-y-2"></div>
     </div>
 
-    <!-- ABA 4: LISTAGEM -->
-    <div class="view-section fade-in p-3 sm:p-5" id="sec-3">
-      <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-        <h2 class="text-base font-bold text-slate-800">Listagem de Tickets</h2>
-        <button id="btnExportListing" class="flex items-center gap-1.5 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-2 rounded-xl transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-          EXPORTAR LISTAGEM
-        </button>
-      </div>
-      <div class="overflow-auto max-h-[600px] rounded-xl border border-slate-100">
-        <table class="w-full text-sm" style="min-width:480px">
-          <thead class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider">
-            <tr>
-              <th class="px-3 py-3 text-left">ID</th>
-              <th class="px-3 py-3 text-left hidden sm:table-cell">Time</th>
-              <th class="px-3 py-3 text-left hidden sm:table-cell">Causa</th>
-              <th class="px-3 py-3 text-left">Assunto</th>
-              <th class="px-3 py-3 text-left">Resolução</th>
-            </tr>
-          </thead>
-          <tbody id="listingBody" class="divide-y divide-slate-50"></tbody>
-        </table>
-      </div>
-    </div>
+    <!-- KPI GRID -->
+    <div class="kpi-grid" id="kpiGrid"></div>
 
-    <!-- ABA 5: PAINEL ITIL -->
-    <div class="view-section fade-in p-3 sm:p-5" id="sec-4">
-      <h2 class="text-base font-bold text-slate-800 mb-4">Painel ITIL — Auditoria &amp; Saúde</h2>
-      <div class="grid md:grid-cols-2 gap-4">
-        <div class="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-sm">
-          <div class="flex items-center gap-2 mb-3">
-            <div class="w-2 h-6 rounded-full bg-red-400"></div>
-            <h3 class="font-bold text-slate-800">Auditoria de Qualidade</h3>
-          </div>
-          <p class="text-xs text-slate-500 mb-4">Top 5 Times com maior volume de tickets <strong>NÃO</strong> Resolvidos Definitivamente.</p>
-          <div id="auditList" class="space-y-3"></div>
-        </div>
-        <div id="healthPanel" class="rounded-2xl p-4 sm:p-5 shadow-sm border">
-          <div class="flex items-center gap-2 mb-3">
-            <div class="w-2 h-6 rounded-full bg-emerald-400" id="healthDot"></div>
-            <h3 class="font-bold" id="healthTitle">Saúde Estrutural</h3>
-          </div>
-          <div class="flex items-center gap-4">
-            <div class="relative w-24 h-24 flex-shrink-0">
-              <svg class="w-24 h-24 -rotate-90" viewBox="0 0 96 96">
-                <circle cx="48" cy="48" r="40" fill="none" stroke="#e2e8f0" stroke-width="10"/>
-                <circle id="healthRing" cx="48" cy="48" r="40" fill="none" stroke="#10b981" stroke-width="10" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-              </svg>
-              <div class="absolute inset-0 flex items-center justify-center">
-                <span id="healthPct" class="text-lg font-bold mono">0%</span>
-              </div>
-            </div>
-            <div>
-              <div id="healthLabel" class="text-base font-bold"></div>
-              <div id="healthMsg" class="text-xs text-slate-500 mt-1 leading-relaxed"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- TABS -->
+    <div class="tabs-wrap">
+      <div class="tabs-nav" id="tabsNav"></div>
 
-    <!-- ABA 6: ABERTURA DE PROBLEMAS -->
-    <div class="view-section fade-in p-3 sm:p-5" id="sec-5">
-      <h2 class="text-base font-bold text-slate-800 mb-4">Abertura de Problemas — Candidatos a RCA</h2>
-      <div class="grid md:grid-cols-2 gap-4 mb-5">
-        <div class="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-sm">
-          <div class="flex items-center gap-2 mb-3">
-            <div class="w-2 h-6 rounded-full bg-purple-400"></div>
-            <h3 class="font-bold text-slate-800">Top Causas Ofensoras</h3>
+      <!-- ABA 1: Dashboard -->
+      <div class="tab-section active fade-in" id="sec-0">
+        <div class="sec-title">Eficácia de Resolução</div>
+        <div style="display:flex;justify-content:center;">
+          <div style="position:relative;width:100%;max-width:560px;height:420px;">
+            <canvas id="chartDoughnut"></canvas>
           </div>
-          <div id="topCausasList" class="space-y-3"></div>
-        </div>
-        <div class="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-sm">
-          <div class="flex items-center gap-2 mb-3">
-            <div class="w-2 h-6 rounded-full bg-indigo-400"></div>
-            <h3 class="font-bold text-slate-800">Volume por Time (Geral)</h3>
-          </div>
-          <div id="topTimesList" class="space-y-3"></div>
         </div>
       </div>
-      <div class="bg-indigo-950 rounded-2xl p-4 sm:p-5 shadow-lg">
-        <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
-          <div>
-            <h3 class="font-bold text-white text-base">Recomendações de Problema</h3>
-            <p class="text-indigo-300 text-xs mt-0.5">Tickets elegíveis para abertura de RCA (Contorno / Não Resolvidos)</p>
-          </div>
-          <button id="btnExportRCA" class="flex items-center gap-1.5 text-xs font-semibold bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-2 rounded-xl transition-colors flex-shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-            EXPORTAR TICKETS
+
+      <!-- ABA 2: Matrizes -->
+      <div class="tab-section fade-in" id="sec-1">
+        <div class="sec-title">Matrizes de Tabulação Cruzada</div>
+        <div id="matricesContainer" style="display:flex;flex-direction:column;gap:24px;"></div>
+      </div>
+
+      <!-- ABA 3: Reincidentes -->
+      <div class="tab-section fade-in" id="sec-2">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+          <div class="sec-title" style="margin:0;">Top 20 Assuntos Reincidentes</div>
+          <button class="exp-btn" id="btnExportTop20">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            EXPORTAR TOP 20
           </button>
         </div>
-        <div class="overflow-auto max-h-[400px] rounded-xl">
-          <table class="w-full text-sm" style="min-width:480px">
-            <thead class="bg-indigo-900 text-indigo-200 text-xs font-semibold uppercase tracking-wider">
+        <div id="reincidentesList"></div>
+      </div>
+
+      <!-- ABA 4: Listagem -->
+      <div class="tab-section fade-in" id="sec-3">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+          <div class="sec-title" style="margin:0;">Listagem de Tickets</div>
+          <button class="exp-btn" id="btnExportListing">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            EXPORTAR LISTAGEM
+          </button>
+        </div>
+        <div class="listing-wrap">
+          <table>
+            <thead>
               <tr>
-                <th class="px-3 py-3 text-left sticky top-0 bg-indigo-900">ID</th>
-                <th class="px-3 py-3 text-left sticky top-0 bg-indigo-900">Assunto</th>
-                <th class="px-3 py-3 text-left sticky top-0 bg-indigo-900 hidden sm:table-cell">Causa</th>
-                <th class="px-3 py-3 text-left sticky top-0 bg-indigo-900 hidden sm:table-cell">Time</th>
-                <th class="px-3 py-3 text-left sticky top-0 bg-indigo-900">Resolução</th>
+                <th>Fresh ID</th>
+                <th>Time</th>
+                <th>Causa</th>
+                <th>Assunto</th>
+                <th>Resolução</th>
               </tr>
             </thead>
-            <tbody id="rcaBody" class="divide-y divide-indigo-900"></tbody>
+            <tbody id="listingBody"></tbody>
           </table>
         </div>
       </div>
-    </div>
 
-  </div><!-- /tabs wrapper -->
+      <!-- ABA 5: Painel ITIL -->
+      <div class="tab-section fade-in" id="sec-4">
+        <div class="sec-title">Painel ITIL — Auditoria &amp; Saúde</div>
+        <div class="grid2">
+          <div class="card" style="padding:16px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+              <div style="width:4px;height:24px;border-radius:99px;background:#f87171;flex-shrink:0;"></div>
+              <strong style="font-size:.85rem;">Auditoria de Qualidade</strong>
+            </div>
+            <p style="font-size:.72rem;color:#64748b;margin-bottom:14px;">Top 5 Times com maior volume de tickets <strong>NÃO</strong> Resolvidos Definitivamente.</p>
+            <div id="auditList"></div>
+          </div>
+          <div id="healthPanel" class="card" style="padding:16px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+              <div id="healthDot" style="width:4px;height:24px;border-radius:99px;background:#34d399;flex-shrink:0;"></div>
+              <strong id="healthTitle" style="font-size:.85rem;">Saúde Estrutural</strong>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;">
+              <div style="position:relative;width:96px;height:96px;flex-shrink:0;">
+                <svg class="health-ring" width="96" height="96" viewBox="0 0 96 96">
+                  <circle class="ring-track" cx="48" cy="48" r="40"/>
+                  <circle id="healthRing" class="ring-fill" cx="48" cy="48" r="40" stroke="#10b981" stroke-dashoffset="251.2"/>
+                </svg>
+                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+                  <span id="healthPct" class="mono" style="font-size:1rem;font-weight:700;">0%</span>
+                </div>
+              </div>
+              <div>
+                <div id="healthLabel" style="font-size:.9rem;font-weight:700;margin-bottom:6px;"></div>
+                <div id="healthMsg" style="font-size:.72rem;color:#64748b;line-height:1.6;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA 6: Abertura de Problemas -->
+      <div class="tab-section fade-in" id="sec-5">
+        <div class="sec-title">Abertura de Problemas — Candidatos a RCA</div>
+        <div class="grid2" style="margin-bottom:16px;">
+          <div class="card" style="padding:16px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+              <div style="width:4px;height:24px;border-radius:99px;background:#a855f7;flex-shrink:0;"></div>
+              <strong style="font-size:.82rem;">Top Causas Ofensoras</strong>
+            </div>
+            <div id="topCausasList"></div>
+          </div>
+          <div class="card" style="padding:16px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+              <div style="width:4px;height:24px;border-radius:99px;background:#6366f1;flex-shrink:0;"></div>
+              <strong style="font-size:.82rem;">Volume por Time (Geral)</strong>
+            </div>
+            <div id="topTimesList"></div>
+          </div>
+        </div>
+        <div class="itil-dark">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+            <div>
+              <div style="font-size:.9rem;font-weight:700;color:#fff;">Recomendações de Problema</div>
+              <div style="font-size:.7rem;color:#818cf8;margin-top:2px;">Tickets elegíveis para abertura de RCA (Contorno / Não Resolvidos)</div>
+            </div>
+            <button class="exp-btn" id="btnExportRCA" style="background:#312e81;color:#a5b4fc;">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              EXPORTAR TICKETS
+            </button>
+          </div>
+          <div style="overflow:auto;max-height:360px;border-radius:10px;">
+            <table>
+              <thead>
+                <tr>
+                  <th style="background:#2d2a5e;color:#a5b4fc;">Fresh ID</th>
+                  <th style="background:#2d2a5e;color:#a5b4fc;">Assunto</th>
+                  <th style="background:#2d2a5e;color:#a5b4fc;">Causa</th>
+                  <th style="background:#2d2a5e;color:#a5b4fc;">Time</th>
+                  <th style="background:#2d2a5e;color:#a5b4fc;">Resolução Atual</th>
+                </tr>
+              </thead>
+              <tbody id="rcaBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tabs-wrap -->
+  </div><!-- /container -->
 </div><!-- /dashMain -->
 
 <script>
-// ═══════════════════════════════════════════════
-//  STATE
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════════
 const CLOSED_STATES = ['closed','resolved','fechado','resolvido'];
-const PIE_COLORS = ['#10b981','#f59e0b','#6366f1','#ef4444','#8b5cf6','#0ea5e9','#f97316','#ec4899','#14b8a6','#a3e635'];
-const TABS = [
-  {label:'📊 Dashboard'},
-  {label:'🔢 Matrizes'},
-  {label:'🔁 Reincidentes'},
-  {label:'📋 Listagem'},
-  {label:'🏥 Painel ITIL'},
-  {label:'🚨 Problemas'},
-];
+const PIE_COLORS    = ['#10b981','#f59e0b','#6366f1','#ef4444','#8b5cf6','#0ea5e9','#f97316','#ec4899','#14b8a6','#84cc16'];
+const TABS = ['📊 Dashboard','🔢 Matrizes','🔁 Reincidentes','📋 Listagem','🏥 Painel ITIL','🚨 Problemas'];
 const DROPDOWN_DEFS = [
   {key:'Nome da empresa',         label:'Empresa'},
   {key:'Time de Desenvolvimento', label:'Time Desenv.'},
@@ -270,78 +406,105 @@ const DROPDOWN_DEFS = [
   {key:'Estado',                  label:'Status'},
 ];
 
-let allData = [], filteredData = [], doughnutChart = null;
-let dropdownSelections = {}, dropdownSearches = {};
+let allData=[], filteredData=[], doughnutChart=null;
+let ddSel={}, ddSearch={};
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  CSV PARSER
-// ═══════════════════════════════════════════════
-function parseCSV(text) {
-  const rows = []; let i=0, n=text.length;
+// ═══════════════════════════════════════════
+function parseCSV(text){
+  const rows=[];let i=0,n=text.length;
   while(i<n){
     const row=[];
     while(i<n){
       let f='';
-      if(text[i]==='"'){i++;while(i<n){if(text[i]==='"'&&text[i+1]==='"'){f+='"';i+=2;}else if(text[i]==='"'){i++;break;}else f+=text[i++];}}
-      else{while(i<n&&text[i]!==','&&text[i]!=='\n'&&text[i]!=='\r')f+=text[i++];}
+      if(text[i]==='"'){
+        i++;
+        while(i<n){
+          if(text[i]==='"'&&text[i+1]==='"'){f+='"';i+=2;}
+          else if(text[i]==='"'){i++;break;}
+          else f+=text[i++];
+        }
+      } else {
+        while(i<n&&text[i]!==','&&text[i]!=='\n'&&text[i]!=='\r')f+=text[i++];
+      }
       row.push(f.trim());
       if(i<n&&text[i]===',')i++;else break;
     }
-    if(i<n&&text[i]==='\r')i++;if(i<n&&text[i]==='\n')i++;
+    if(i<n&&text[i]==='\r')i++;
+    if(i<n&&text[i]==='\n')i++;
     if(row.length&&!(row.length===1&&row[0]===''))rows.push(row);
   }
   return rows;
 }
 
-const HMAP = {
-  'id do pedido':'Fresh ID','solucao aplicada':'Solução Aplicada','solução aplicada':'Solução Aplicada',
-  'causa':'Causa','tipo de pedido':'Tipo de Pedido','time desenvolvimento':'Time de Desenvolvimento',
-  'time de desenvolvimento':'Time de Desenvolvimento','tipo de resolucao':'Tipo de Resolução',
-  'tipo de resolução':'Tipo de Resolução','nome da empresa':'Nome da empresa','estado':'Estado',
-  'prioridade':'Prioridade','data de criacao':'Data de criação','data de criação':'Data de criação','assunto':'Assunto'
+const HMAP={
+  'id do pedido':'Fresh ID',
+  'solucao aplicada':'Solução Aplicada','solução aplicada':'Solução Aplicada',
+  'causa':'Causa',
+  'tipo de pedido':'Tipo de Pedido',
+  'time desenvolvimento':'Time de Desenvolvimento','time de desenvolvimento':'Time de Desenvolvimento',
+  'tipo de resolucao':'Tipo de Resolução','tipo de resolução':'Tipo de Resolução',
+  'nome da empresa':'Nome da empresa',
+  'estado':'Estado','prioridade':'Prioridade',
+  'data de criacao':'Data de criação','data de criação':'Data de criação',
+  'assunto':'Assunto'
 };
 function nh(h){return h.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();}
-function mapH(raw){return raw.map(h=>{const n=nh(h);if(HMAP[n])return HMAP[n];for(const[k,v]of Object.entries(HMAP))if(n.startsWith(k))return v;return h;});}
+function mapHeaders(raw){
+  return raw.map(h=>{
+    const n=nh(h);
+    if(HMAP[n])return HMAP[n];
+    for(const[k,v]of Object.entries(HMAP))if(n.startsWith(k))return v;
+    return h;
+  });
+}
 function processCSV(text){
   if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
   const rows=parseCSV(text);if(rows.length<2)return[];
-  const headers=mapH(rows[0]);
-  return rows.slice(1).map(row=>{const o={};headers.forEach((h,i)=>{o[h]=(row[i]!==undefined&&row[i]!=='')?row[i]:'(Vazio)';});return o;});
+  const headers=mapHeaders(rows[0]);
+  return rows.slice(1).map(row=>{
+    const o={};
+    headers.forEach((h,i)=>{o[h]=(row[i]!==undefined&&row[i]!=='')?row[i]:'(Vazio)';});
+    return o;
+  });
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  FILE INPUT
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 document.getElementById('csvInput').addEventListener('change',function(e){
   const file=e.target.files[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=function(ev){
     allData=processCSV(ev.target.result);
-    if(!allData.length){alert('Nenhum dado encontrado no CSV.');return;}
-    document.getElementById('emptyState').classList.add('hidden');
-    document.getElementById('dashMain').classList.remove('hidden');
-    document.getElementById('headerMeta').classList.remove('hidden');
+    if(!allData.length){alert('Nenhum dado encontrado no CSV. Verifique o formato.');return;}
+    document.getElementById('emptyState').style.display='none';
+    document.getElementById('dashMain').style.display='block';
+    document.getElementById('headerMeta').style.display='block';
     document.getElementById('headerFile').textContent=file.name;
-    document.getElementById('headerCount').textContent=allData.length+' tickets';
+    document.getElementById('headerCount').textContent=allData.length+' tickets carregados';
     initDropdowns();buildTabs();applyFilters();
   };
   reader.readAsText(file,'UTF-8');
 });
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  TABS
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 function buildTabs(){
   const nav=document.getElementById('tabsNav');nav.innerHTML='';
-  TABS.forEach((t,i)=>{
+  TABS.forEach((label,i)=>{
     const b=document.createElement('button');
-    b.className='tab-btn'+(i===0?' active':'');b.textContent=t.label;
-    b.addEventListener('click',()=>switchTab(i));nav.appendChild(b);
+    b.className='tab-btn'+(i===0?' active':'');
+    b.textContent=label;
+    b.onclick=()=>switchTab(i);
+    nav.appendChild(b);
   });
 }
 function switchTab(idx){
   document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
-  document.querySelectorAll('.view-section').forEach((s,i)=>s.classList.toggle('active',i===idx));
+  document.querySelectorAll('.tab-section').forEach((s,i)=>s.classList.toggle('active',i===idx));
   renderTab(idx);
 }
 function renderTab(idx){
@@ -353,91 +516,99 @@ function renderTab(idx){
   else if(idx===5)renderProblems();
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  DROPDOWNS
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 function initDropdowns(){
-  dropdownSelections={};dropdownSearches={};
-  DROPDOWN_DEFS.forEach(d=>{dropdownSelections[d.key]=new Set();dropdownSearches[d.key]='';});
+  ddSel={};ddSearch={};
+  DROPDOWN_DEFS.forEach(d=>{ddSel[d.key]=new Set();ddSearch[d.key]='';});
   buildDropdownUI();
 }
 function buildDropdownUI(){
   const container=document.getElementById('dropdownsContainer');container.innerHTML='';
   DROPDOWN_DEFS.forEach(def=>{
-    const wrap=document.createElement('div');wrap.className='relative';
+    const wrap=document.createElement('div');wrap.className='dd-wrap';
     wrap.innerHTML=`
-      <button data-dd="${def.key}" class="dd-btn flex items-center gap-1.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl px-2.5 py-2 bg-white hover:bg-slate-50 text-slate-700">
+      <button class="dd-btn" data-dd="${def.key}">
         <span>${def.label}</span>
-        <span class="dd-count hidden bg-indigo-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center mono font-bold"></span>
-        <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        <span class="dd-badge" id="badge-${def.key.replace(/\s/g,'_')}"></span>
+        <svg class="dd-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
       </button>
-      <div class="dropdown-panel absolute top-full left-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl w-64 max-h-72 overflow-y-auto p-2" data-dd-panel="${def.key}">
-        <input type="text" placeholder="Pesquisar..." class="dd-search w-full text-sm border border-slate-200 rounded-lg px-3 py-1.5 mb-1 focus:outline-none focus:ring-2 focus:ring-indigo-300" data-dd-search="${def.key}"/>
-        <button class="dd-clear w-full text-left text-xs text-red-400 hover:text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-50 font-semibold mb-1" data-dd-clear="${def.key}">Limpar Seleção</button>
-        <div class="dd-options" data-dd-opts="${def.key}"></div>
+      <div class="dd-panel" id="panel-${def.key.replace(/\s/g,'_')}">
+        <input class="dd-search" type="text" placeholder="Pesquisar..." data-key="${def.key}" value=""/>
+        <button class="dd-clear-sel" data-key="${def.key}">Limpar Seleção</button>
+        <div class="dd-opts" id="opts-${def.key.replace(/\s/g,'_')}"></div>
       </div>`;
     container.appendChild(wrap);
-  });
-  document.querySelectorAll('.dd-btn').forEach(btn=>{
-    btn.addEventListener('click',e=>{
-      e.stopPropagation();const key=btn.dataset.dd;
-      const panel=document.querySelector(`[data-dd-panel="${key}"]`);
-      document.querySelectorAll('.dropdown-panel.open').forEach(p=>{if(p!==panel)p.classList.remove('open');});
-      if(!panel.classList.contains('open')){populateDD(key);panel.classList.add('open');}
+    // toggle panel
+    wrap.querySelector('.dd-btn').addEventListener('click',e=>{
+      e.stopPropagation();
+      const key=def.key,pid='panel-'+key.replace(/\s/g,'_');
+      document.querySelectorAll('.dd-panel.open').forEach(p=>{if(p.id!==pid)p.classList.remove('open');});
+      const panel=document.getElementById(pid);
+      if(!panel.classList.contains('open')){populateOpts(key);panel.classList.add('open');}
       else panel.classList.remove('open');
     });
-  });
-  document.addEventListener('click',()=>document.querySelectorAll('.dropdown-panel.open').forEach(p=>p.classList.remove('open')));
-  document.querySelectorAll('.dd-search').forEach(inp=>{
-    inp.addEventListener('click',e=>e.stopPropagation());
-    inp.addEventListener('input',function(){dropdownSearches[this.dataset.ddSearch]=this.value.toLowerCase();populateDD(this.dataset.ddSearch);});
-  });
-  document.querySelectorAll('.dd-clear').forEach(btn=>{
-    btn.addEventListener('click',e=>{
-      e.stopPropagation();const key=btn.dataset.ddClear;
-      dropdownSelections[key].clear();populateDD(key);updateBadge(key);applyFilters();
+    // search
+    wrap.querySelector('.dd-search').addEventListener('click',e=>e.stopPropagation());
+    wrap.querySelector('.dd-search').addEventListener('input',function(){
+      ddSearch[this.dataset.key]=this.value.toLowerCase();
+      populateOpts(this.dataset.key);
+    });
+    // clear sel
+    wrap.querySelector('.dd-clear-sel').addEventListener('click',e=>{
+      e.stopPropagation();
+      ddSel[def.key].clear();populateOpts(def.key);updateBadge(def.key);applyFilters();
     });
   });
+  document.addEventListener('click',()=>document.querySelectorAll('.dd-panel.open').forEach(p=>p.classList.remove('open')));
 }
-function populateDD(key){
-  const container=document.querySelector(`[data-dd-opts="${key}"]`);if(!container)return;
-  const search=dropdownSearches[key]||'';
+function populateOpts(key){
+  const sid='opts-'+key.replace(/\s/g,'_');
+  const container=document.getElementById(sid);if(!container)return;
+  const search=ddSearch[key]||'';
   const vals=[...new Set(allData.map(d=>d[key]||'(Vazio)'))].sort().filter(v=>v.toLowerCase().includes(search));
   container.innerHTML=vals.map(v=>{
-    const checked=dropdownSelections[key].has(v);
-    return `<label class="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer text-sm ${checked?'bg-indigo-50 text-indigo-700 font-medium':'text-slate-700'}">
-      <input type="checkbox" class="dd-checkbox accent-indigo-600" data-dd-key="${key}" data-dd-val="${v.replace(/"/g,'&quot;')}" ${checked?'checked':''}/>
-      <span class="truncate">${v}</span></label>`;
+    const sel=ddSel[key].has(v);
+    return`<div class="dd-option${sel?' selected':''}" data-key="${key}" data-val="${v.replace(/"/g,'&quot;')}">
+      <input type="checkbox" ${sel?'checked':''}/>
+      <span>${v}</span>
+    </div>`;
   }).join('');
-  container.querySelectorAll('.dd-checkbox').forEach(cb=>{
-    cb.addEventListener('change',function(){
-      if(this.checked)dropdownSelections[this.dataset.ddKey].add(this.dataset.ddVal);
-      else dropdownSelections[this.dataset.ddKey].delete(this.dataset.ddVal);
-      updateBadge(this.dataset.ddKey);applyFilters();
+  container.querySelectorAll('.dd-option').forEach(opt=>{
+    opt.addEventListener('click',e=>{
+      e.stopPropagation();
+      const k=opt.dataset.key,v=opt.dataset.val;
+      const cb=opt.querySelector('input');
+      if(ddSel[k].has(v)){ddSel[k].delete(v);cb.checked=false;opt.classList.remove('selected');}
+      else{ddSel[k].add(v);cb.checked=true;opt.classList.add('selected');}
+      updateBadge(k);applyFilters();
     });
   });
 }
 function updateBadge(key){
-  const n=dropdownSelections[key].size;
-  const btn=document.querySelector(`[data-dd="${key}"]`);if(!btn)return;
-  const b=btn.querySelector('.dd-count');
-  if(n>0){b.classList.remove('hidden');b.textContent=n;}else b.classList.add('hidden');
+  const n=ddSel[key].size;
+  const b=document.getElementById('badge-'+key.replace(/\s/g,'_'));
+  if(!b)return;
+  b.textContent=n||'';
+  n>0?b.classList.add('show'):b.classList.remove('show');
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  FILTERS
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 function applyFilters(){
   const ds=document.getElementById('fDateStart').value;
   const de=document.getElementById('fDateEnd').value;
   filteredData=allData.filter(d=>{
     if(ds||de){
-      const raw=(d['Data de criação']||'').split(' ')[0];let ts=null;
+      const raw=(d['Data de criação']||'').split(' ')[0];
+      let ts=null;
       if(/^\d{4}-\d{2}-\d{2}/.test(raw))ts=new Date(raw);
       else if(/^\d{2}\/\d{2}\/\d{4}/.test(raw)){const[dd,mm,yy]=raw.split('/');ts=new Date(`${yy}-${mm}-${dd}`);}
       if(ts){if(ds&&ts<new Date(ds))return false;if(de&&ts>new Date(de))return false;}
     }
-    for(const{key}of DROPDOWN_DEFS){const sel=dropdownSelections[key];if(sel&&sel.size>0&&!sel.has(d[key]||'(Vazio)'))return false;}
+    for(const{key}of DROPDOWN_DEFS){const s=ddSel[key];if(s&&s.size>0&&!s.has(d[key]||'(Vazio)'))return false;}
     return true;
   });
   renderKPIs();
@@ -447,62 +618,79 @@ function applyFilters(){
 document.getElementById('fDateStart').addEventListener('change',applyFilters);
 document.getElementById('fDateEnd').addEventListener('change',applyFilters);
 document.getElementById('btnClearFilters').addEventListener('click',()=>{
-  document.getElementById('fDateStart').value='';document.getElementById('fDateEnd').value='';
-  DROPDOWN_DEFS.forEach(d=>{dropdownSelections[d.key]=new Set();dropdownSearches[d.key]='';updateBadge(d.key);const inp=document.querySelector(`[data-dd-search="${d.key}"]`);if(inp)inp.value='';});
+  document.getElementById('fDateStart').value='';
+  document.getElementById('fDateEnd').value='';
+  DROPDOWN_DEFS.forEach(d=>{
+    ddSel[d.key].clear();ddSearch[d.key]='';updateBadge(d.key);
+    const inp=document.querySelector(`.dd-search[data-key="${d.key}"]`);if(inp)inp.value='';
+  });
   applyFilters();
 });
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  KPIs
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 function renderKPIs(){
   const data=filteredData,total=data.length;
   const backlog=data.filter(d=>!CLOSED_STATES.includes((d['Estado']||'').toLowerCase())).length;
   const sc={};data.forEach(d=>{const n=(d['Assunto']||'').toLowerCase().replace(/\s+/g,' ');sc[n]=(sc[n]||0)+1;});
-  const reincR=total>0?((data.filter(d=>sc[(d['Assunto']||'').toLowerCase().replace(/\s+/g,' ')]>1).length/total)*100).toFixed(1)+'%':'0%';
+  const reincT=data.filter(d=>sc[(d['Assunto']||'').toLowerCase().replace(/\s+/g,' ')]>1).length;
+  const reincR=total>0?((reincT/total)*100).toFixed(1)+'%':'0%';
   const def=data.filter(d=>(d['Tipo de Resolução']||'').trim()==='Resolvido Definitivo').length;
   const pal=data.filter(d=>/paliativo/i.test(d['Tipo de Resolução']||'')).length;
   const cnt=data.filter(d=>/contorno/i.test(d['Tipo de Resolução']||'')).length;
   const pct=v=>total>0?((v/total)*100).toFixed(1)+'%':'0%';
   const cards=[
-    {label:'Analisados',value:total,sub:'total filtrado',color:'indigo',icon:'📦'},
-    {label:'Backlog',value:backlog,sub:'em aberto',color:'orange',icon:'⏳'},
-    {label:'Reincid.',value:reincR,sub:'taxa recorrência',color:'purple',icon:'🔁'},
-    {label:'Definitiva',value:pct(def),sub:def+' tickets',color:'emerald',icon:'✅'},
-    {label:'Paliativo',value:pct(pal),sub:pal+' tickets',color:'amber',icon:'⚠️'},
-    {label:'Contorno',value:pct(cnt),sub:cnt+' tickets',color:'rose',icon:'🔄'},
+    {label:'Analisados', value:total,      sub:'total filtrado',   badge:'badge-indigo', icon:'📦'},
+    {label:'Backlog',    value:backlog,     sub:'em aberto',        badge:'badge-orange', icon:'⏳'},
+    {label:'Reincid.',   value:reincR,      sub:'taxa recorrência', badge:'badge-purple', icon:'🔁'},
+    {label:'Definitiva', value:pct(def),    sub:def+' tickets',     badge:'badge-emerald',icon:'✅'},
+    {label:'Paliativo',  value:pct(pal),    sub:pal+' tickets',     badge:'badge-amber',  icon:'⚠️'},
+    {label:'Contorno',   value:pct(cnt),    sub:cnt+' tickets',     badge:'badge-rose',   icon:'🔄'},
   ];
-  const cm={indigo:'bg-indigo-50 text-indigo-700',orange:'bg-orange-50 text-orange-700',purple:'bg-purple-50 text-purple-700',emerald:'bg-emerald-50 text-emerald-700',amber:'bg-amber-50 text-amber-700',rose:'bg-rose-50 text-rose-600'};
   document.getElementById('kpiGrid').innerHTML=cards.map(c=>`
-    <div class="kpi-card bg-white rounded-2xl border border-slate-100 shadow-sm p-3 sm:p-4">
-      <div class="flex items-start justify-between mb-1.5"><span class="text-lg">${c.icon}</span><span class="badge ${cm[c.color]}">${c.label}</span></div>
-      <div class="text-xl sm:text-2xl font-bold text-slate-900 mono">${c.value}</div>
-      <div class="text-[10px] sm:text-xs text-slate-400 mt-0.5">${c.sub}</div>
+    <div class="kpi-card">
+      <div class="kpi-top">
+        <span class="kpi-icon">${c.icon}</span>
+        <span class="kpi-badge ${c.badge}">${c.label}</span>
+      </div>
+      <div class="kpi-value">${c.value}</div>
+      <div class="kpi-sub">${c.sub}</div>
     </div>`).join('');
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  DOUGHNUT
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 const pieLinesPlugin={
   id:'pieLines',
   afterDraw(chart){
-    const{ctx,data}=chart;const meta=chart.getDatasetMeta(0);
+    const{ctx,data}=chart;
+    const meta=chart.getDatasetMeta(0);
     if(!meta||!meta.data.length)return;
-    const total=data.datasets[0].data.reduce((a,b)=>a+b,0);if(!total)return;
+    const total=data.datasets[0].data.reduce((a,b)=>a+b,0);
+    if(!total)return;
     const mob=window.innerWidth<640;
-    ctx.save();ctx.font=(mob?'10':'11')+'px "IBM Plex Mono",monospace';ctx.textBaseline='middle';
+    ctx.save();
+    ctx.font=(mob?'9':'11')+'px "IBM Plex Mono",monospace';
+    ctx.textBaseline='middle';
     meta.data.forEach((arc,i)=>{
-      const val=data.datasets[0].data[i];if(!val||val/total<0.03)return;
-      const pct=((val/total)*100).toFixed(1);const mid=(arc.startAngle+arc.endAngle)/2;
-      const outerR=arc.outerRadius;const color=PIE_COLORS[i%PIE_COLORS.length];
-      const ex=arc.x+Math.cos(mid)*outerR,ey=arc.y+Math.sin(mid)*outerR;
-      const elbR=outerR+(mob?16:24);const elx=arc.x+Math.cos(mid)*elbR,ely=arc.y+Math.sin(mid)*elbR;
-      const txOff=Math.cos(mid)>0?(mob?28:38):-(mob?28:38);const tx=elx+txOff;
+      const val=data.datasets[0].data[i];
+      if(!val||val/total<0.03)return;
+      const pct=((val/total)*100).toFixed(1);
+      const mid=(arc.startAngle+arc.endAngle)/2;
+      const r=arc.outerRadius;
+      const color=PIE_COLORS[i%PIE_COLORS.length];
+      const ex=arc.x+Math.cos(mid)*r, ey=arc.y+Math.sin(mid)*r;
+      const er=r+(mob?14:22);
+      const elx=arc.x+Math.cos(mid)*er, ely=arc.y+Math.sin(mid)*er;
+      const off=Math.cos(mid)>0?(mob?26:36):-(mob?26:36);
+      const tx=elx+off;
       ctx.beginPath();ctx.moveTo(ex,ey);ctx.lineTo(elx,ely);ctx.lineTo(tx,ely);
       ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.stroke();
       ctx.beginPath();ctx.arc(ex,ey,2.5,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
-      ctx.fillStyle='#1e293b';ctx.textAlign=Math.cos(mid)>0?'left':'right';
+      ctx.fillStyle='#1e293b';
+      ctx.textAlign=Math.cos(mid)>0?'left':'right';
       ctx.fillText(`${data.labels[i]} - ${val} (${pct}%)`,tx+(Math.cos(mid)>0?4:-4),ely);
     });
     ctx.restore();
@@ -523,210 +711,241 @@ function renderDoughnut(){
     data:{labels,datasets:[{data:values,backgroundColor:PIE_COLORS.slice(0,labels.length),borderWidth:2,borderColor:'#fff',hoverBorderWidth:3}]},
     options:{
       cutout:'55%',responsive:true,maintainAspectRatio:false,
-      layout:{padding:mob?{top:25,bottom:10,left:80,right:20}:{top:45,bottom:40,left:130,right:80}},
+      layout:{padding:mob?{top:20,bottom:10,left:70,right:16}:{top:40,bottom:40,left:120,right:80}},
       plugins:{
         legend:{display:true,position:mob?'bottom':'right',labels:{font:{family:'Syne',size:mob?10:12},boxWidth:10,padding:mob?6:12}},
-        datalabels:{display:false},tooltip:{enabled:true}
+        datalabels:{display:false},
+        tooltip:{enabled:true}
       }
     },
     plugins:[ChartDataLabels]
   });
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  MATRICES
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 function buildCT(data,rk,ck){
-  const rws={},cls={},mx={},ct={},rt={};
+  const rs={},cs={},mx={},ct={},rt={};
   data.forEach(d=>{
     const r=(d[rk]||'(Vazio)').trim(),c=(d[ck]||'(Vazio)').trim();
-    rws[r]=1;cls[c]=1;if(!mx[r])mx[r]={};mx[r][c]=(mx[r][c]||0)+1;ct[c]=(ct[c]||0)+1;rt[r]=(rt[r]||0)+1;
+    rs[r]=1;cs[c]=1;if(!mx[r])mx[r]={};mx[r][c]=(mx[r][c]||0)+1;ct[c]=(ct[c]||0)+1;rt[r]=(rt[r]||0)+1;
   });
-  return{rowArr:Object.keys(rws).sort(),colArr:Object.keys(cls).sort(),mx,ct,rt,total:data.length};
+  return{rowArr:Object.keys(rs).sort(),colArr:Object.keys(cs).sort(),mx,ct,rt,total:data.length};
 }
 function renderMatrix(container,title,rk,ck,mode){
   const{rowArr,colArr,mx,ct,rt,total}=buildCT(filteredData,rk,ck);
   const fmt=v=>mode==='pct'?(total>0?((v/total)*100).toFixed(1)+'%':'0%'):(v||0);
-  const wrap=document.createElement('div');wrap.className='bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden';
+  const wrap=document.createElement('div');
   wrap.innerHTML=`
-    <div class="flex items-center justify-between px-4 py-3 border-b border-slate-50">
-      <span class="font-bold text-slate-800 text-sm">${title}</span>
-      <button class="btn-exp-mx flex items-center gap-1 text-xs font-semibold bg-slate-50 hover:bg-slate-100 text-slate-600 px-3 py-1.5 rounded-xl">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Exportar CSV
+    <div class="matrix-hdr">
+      <span class="matrix-title">${title}</span>
+      <button class="exp-btn btn-exp-mx">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Exportar CSV
       </button>
     </div>
-    <div class="overflow-auto max-h-72">
-      <table class="w-full text-xs" style="min-width:400px">
-        <thead class="bg-slate-50 text-slate-500 font-semibold">
-          <tr>
-            <th class="px-3 py-2 text-left sticky top-0 bg-slate-50">${rk}</th>
-            ${colArr.map(c=>`<th class="px-3 py-2 text-center sticky top-0 bg-slate-50 min-w-[70px]">${c}</th>`).join('')}
-            <th class="px-3 py-2 text-center sticky top-0 bg-slate-100 font-bold">TOTAL</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-50">
-          ${rowArr.map(r=>`<tr class="hover:bg-slate-50">
-            <td class="px-3 py-2 text-slate-700 font-medium max-w-[160px] truncate">${r}</td>
-            ${colArr.map(c=>{const v=(mx[r]&&mx[r][c])||0;return`<td class="px-3 py-2 text-center mono ${v>0?'text-indigo-700 font-semibold':'text-slate-300'}">${fmt(v)}</td>`;}).join('')}
-            <td class="px-3 py-2 text-center bg-slate-50 font-bold mono text-slate-800">${fmt(rt[r]||0)}</td>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>${rk}</th>
+          ${colArr.map(c=>`<th>${c}</th>`).join('')}
+          <th style="background:#f1f5f9;font-weight:700;">TOTAL</th>
+        </tr></thead>
+        <tbody>
+          ${rowArr.map(r=>`<tr>
+            <td class="truncate">${r}</td>
+            ${colArr.map(c=>{const v=(mx[r]&&mx[r][c])||0;return`<td class="num ${v>0?'num-hi':'num-lo'}">${fmt(v)}</td>`;}).join('')}
+            <td class="num" style="font-weight:700;">${fmt(rt[r]||0)}</td>
           </tr>`).join('')}
-          <tr class="bg-slate-100 font-bold">
-            <td class="px-3 py-2 text-slate-500 text-xs uppercase tracking-wider">TOTAL COLUNA</td>
-            ${colArr.map(c=>`<td class="px-3 py-2 text-center mono text-slate-700">${fmt(ct[c]||0)}</td>`).join('')}
-            <td class="px-3 py-2 text-center mono text-slate-900">${mode==='pct'?(total>0?'100%':'0%'):total}</td>
-          </tr>
         </tbody>
+        <tfoot><tr class="tfoot-row">
+          <td>TOTAL COLUNA</td>
+          ${colArr.map(c=>`<td class="num">${fmt(ct[c]||0)}</td>`).join('')}
+          <td class="num">${mode==='pct'?(total>0?'100%':'0%'):total}</td>
+        </tr></tfoot>
       </table>
     </div>`;
   container.appendChild(wrap);
   wrap.querySelector('.btn-exp-mx').addEventListener('click',()=>{
     let csv=[rk+','+colArr.join(',')+',TOTAL'];
-    rowArr.forEach(r=>csv.push([r,...colArr.map(c=>(mx[r]&&mx[r][c])||0),rt[r]||0].join(',')));
+    rowArr.forEach(r=>csv.push([`"${r}"`,...colArr.map(c=>(mx[r]&&mx[r][c])||0),rt[r]||0].join(',')));
     csv.push(['TOTAL COLUNA',...colArr.map(c=>ct[c]||0),total].join(','));
-    downloadCSV(title.replace(/\s/g,'_')+'.csv',csv.join('\n'));
+    dlCSV(title.replace(/[^a-z0-9]/gi,'_')+'.csv',csv.join('\n'));
   });
 }
 function renderMatrices(){
   const c=document.getElementById('matricesContainer');c.innerHTML='';
-  [{title:'Solução Aplicada × Causa',row:'Solução Aplicada',col:'Causa',mode:'count'},
-   {title:'Solução Aplicada × Tipo de Resolução',row:'Solução Aplicada',col:'Tipo de Resolução',mode:'count'},
-   {title:'Causa × Tipo de Resolução (Volume)',row:'Causa',col:'Tipo de Resolução',mode:'count'},
-   {title:'Causa × Tipo de Resolução (%)',row:'Causa',col:'Tipo de Resolução',mode:'pct'},
-   {title:'Time de Desenvolvimento × Tipo de Resolução',row:'Time de Desenvolvimento',col:'Tipo de Resolução',mode:'count'}
-  ].forEach(d=>renderMatrix(c,d.title,d.row,d.col,d.mode));
+  [{t:'Solução Aplicada × Causa',r:'Solução Aplicada',c:'Causa',m:'count'},
+   {t:'Solução Aplicada × Tipo de Resolução',r:'Solução Aplicada',c:'Tipo de Resolução',m:'count'},
+   {t:'Causa × Tipo de Resolução (Volume)',r:'Causa',c:'Tipo de Resolução',m:'count'},
+   {t:'Causa × Tipo de Resolução (%)',r:'Causa',c:'Tipo de Resolução',m:'pct'},
+   {t:'Time de Desenvolvimento × Tipo de Resolução',r:'Time de Desenvolvimento',c:'Tipo de Resolução',m:'count'}
+  ].forEach(d=>renderMatrix(c,d.t,d.r,d.c,d.m));
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  REINCIDENTES
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 function renderReincidentes(){
   const total=filteredData.length,groups={};
   filteredData.forEach(d=>{
     const norm=(d['Assunto']||'').toLowerCase().replace(/\s+/g,' ');
-    if(!groups[norm])groups[norm]={original:d['Assunto'],tickets:[],lastRes:''};
-    groups[norm].tickets.push(d);groups[norm].lastRes=d['Tipo de Resolução']||'';
+    if(!groups[norm])groups[norm]={orig:d['Assunto'],tickets:[],lastRes:''};
+    groups[norm].tickets.push(d);
+    groups[norm].lastRes=d['Tipo de Resolução']||'';
   });
   const sorted=Object.entries(groups).filter(([,v])=>v.tickets.length>1).sort((a,b)=>b[1].tickets.length-a[1].tickets.length).slice(0,20);
   const maxV=sorted.length?sorted[0][1].tickets.length:1;
   const container=document.getElementById('reincidentesList');
-  if(!sorted.length){container.innerHTML='<div class="text-center text-slate-400 py-10">Nenhum assunto reincidente encontrado.</div>';return;}
+  if(!sorted.length){container.innerHTML='<p style="text-align:center;color:#94a3b8;padding:32px;">Nenhum assunto reincidente encontrado.</p>';return;}
   container.innerHTML=sorted.map(([norm,g],i)=>{
     const vol=g.tickets.length,pct=total>0?((vol/total)*100).toFixed(1):0,bw=((vol/maxV)*100).toFixed(1);
     const isDef=/definitiv/i.test(g.lastRes),isPal=/paliativ|contorno/i.test(g.lastRes);
-    const bar=isDef?'bg-emerald-400':isPal?'bg-red-400':'bg-slate-300';
-    const bord=isDef?'border-emerald-200':isPal?'border-red-200':'border-slate-100';
-    const bdg=isDef?'bg-emerald-50 text-emerald-700':isPal?'bg-red-50 text-red-600':'bg-slate-50 text-slate-500';
-    return`<div class="bg-white border ${bord} rounded-2xl p-3 sm:p-4">
-      <div class="flex items-start justify-between gap-2 mb-2">
-        <div class="flex items-center gap-2 min-w-0">
-          <span class="mono text-xs text-slate-400 flex-shrink-0">#${i+1}</span>
-          <span class="text-xs sm:text-sm font-medium text-slate-800">${g.original||norm}</span>
+    const barColor=isDef?'#10b981':isPal?'#ef4444':'#cbd5e1';
+    const bord=isDef?'#a7f3d0':isPal?'#fca5a5':'#f1f5f9';
+    const bdgBg=isDef?'#ecfdf5':isPal?'#fef2f2':'#f8fafc';
+    const bdgTxt=isDef?'#065f46':isPal?'#b91c1c':'#64748b';
+    return`<div class="reinc-item" style="border-color:${bord};">
+      <div class="reinc-top">
+        <div>
+          <span style="font-size:.65rem;color:#94a3b8;font-family:'IBM Plex Mono',monospace;margin-right:6px;">#${i+1}</span>
+          <span class="reinc-name">${g.orig||norm}</span>
         </div>
-        <div class="flex items-center gap-1.5 flex-shrink-0">
-          <span class="mono text-sm font-bold text-slate-900">${vol}</span>
-          <span class="badge ${bdg}">${pct}%</span>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <span class="reinc-num">${vol}</span>
+          <span class="badge" style="background:${bdgBg};color:${bdgTxt};">${pct}%</span>
         </div>
       </div>
-      <div class="relative h-2 bg-slate-100 rounded-full overflow-hidden">
-        <div class="bar-fill absolute inset-y-0 left-0 ${bar} rounded-full" style="width:${bw}%"></div>
-      </div>
-      <div class="text-xs text-slate-400 mt-1.5">Última resolução: <span class="font-medium text-slate-600">${g.lastRes||'(Vazio)'}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${bw}%;background:${barColor};"></div></div>
+      <div class="reinc-meta">Última resolução: <strong>${g.lastRes||'(Vazio)'}</strong></div>
     </div>`;
   }).join('');
   document.getElementById('btnExportTop20').onclick=()=>{
     const ns=new Set(sorted.map(([n])=>n));
-    exportTicketsCSV('top20_reincidentes.csv',filteredData.filter(d=>ns.has((d['Assunto']||'').toLowerCase().replace(/\s+/g,' '))));
+    expTickets('top20_reincidentes.csv',filteredData.filter(d=>ns.has((d['Assunto']||'').toLowerCase().replace(/\s+/g,' '))));
   };
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  LISTING
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 function resBadge(val){
   val=(val||'').trim();
-  if(/definitiv/i.test(val))return`<span class="badge bg-emerald-50 text-emerald-700">${val}</span>`;
-  if(/paliativ/i.test(val))return`<span class="badge bg-amber-50 text-amber-700">${val}</span>`;
-  if(/contorno/i.test(val))return`<span class="badge bg-orange-50 text-orange-700">${val}</span>`;
-  if(/n[aã]o resolvid/i.test(val))return`<span class="badge bg-red-50 text-red-600">${val}</span>`;
-  return`<span class="badge bg-slate-50 text-slate-500">${val||'(Vazio)'}</span>`;
+  let bg='#f8fafc',txt='#64748b';
+  if(/definitiv/i.test(val)){bg='#ecfdf5';txt='#065f46';}
+  else if(/paliativ/i.test(val)){bg='#fffbeb';txt='#92400e';}
+  else if(/contorno/i.test(val)){bg='#fff7ed';txt='#c2410c';}
+  else if(/n[aã]o resolvid/i.test(val)){bg='#fef2f2';txt='#b91c1c';}
+  return`<span class="badge" style="background:${bg};color:${txt};">${val||'(Vazio)'}</span>`;
 }
 function renderListing(){
   document.getElementById('listingBody').innerHTML=filteredData.map(d=>`
-    <tr class="hover:bg-slate-50">
-      <td class="px-3 py-2.5 text-xs mono text-indigo-700 font-semibold">${d['Fresh ID']||'-'}</td>
-      <td class="px-3 py-2.5 text-xs text-slate-600 max-w-[130px] truncate hidden sm:table-cell">${d['Time de Desenvolvimento']||'-'}</td>
-      <td class="px-3 py-2.5 text-xs text-slate-600 max-w-[130px] truncate hidden sm:table-cell">${d['Causa']||'-'}</td>
-      <td class="px-3 py-2.5 text-xs text-slate-700"><div class="truncate max-w-[180px]" title="${(d['Assunto']||'').replace(/"/g,'&quot;')}">${d['Assunto']||'-'}</div></td>
-      <td class="px-3 py-2.5 text-xs">${resBadge(d['Tipo de Resolução'])}</td>
+    <tr>
+      <td class="num" style="color:#4f46e5;">${d['Fresh ID']||'-'}</td>
+      <td><div class="truncate">${d['Time de Desenvolvimento']||'-'}</div></td>
+      <td><div class="truncate">${d['Causa']||'-'}</div></td>
+      <td><div class="truncate" style="max-width:220px;" title="${(d['Assunto']||'').replace(/"/g,'&quot;')}">${d['Assunto']||'-'}</div></td>
+      <td>${resBadge(d['Tipo de Resolução'])}</td>
     </tr>`).join('');
-  document.getElementById('btnExportListing').onclick=()=>exportTicketsCSV('listagem_filtrada.csv',filteredData);
+  document.getElementById('btnExportListing').onclick=()=>expTickets('listagem_filtrada.csv',filteredData);
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  ITIL PANEL
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 function renderITILPanel(){
   const data=filteredData,total=data.length;
   const tc={};
   data.filter(d=>(d['Tipo de Resolução']||'').trim()!=='Resolvido Definitivo').forEach(d=>{const t=d['Time de Desenvolvimento']||'(Vazio)';tc[t]=(tc[t]||0)+1;});
-  const top5=Object.entries(tc).sort((a,b)=>b[1]-a[1]).slice(0,5);const maxA=top5.length?top5[0][1]:1;
-  document.getElementById('auditList').innerHTML=top5.length
-    ?top5.map(([t,v])=>`<div><div class="flex justify-between text-xs mb-1"><span class="font-medium text-slate-700 truncate max-w-[200px]">${t}</span><span class="mono text-red-600 font-bold">${v}</span></div><div class="relative h-2 bg-red-50 rounded-full overflow-hidden"><div class="bar-fill absolute inset-y-0 left-0 bg-red-400 rounded-full" style="width:${((v/maxA)*100).toFixed(1)}%"></div></div></div>`).join('')
-    :'<p class="text-slate-400 text-sm">Nenhum dado.</p>';
+  const top5=Object.entries(tc).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxA=top5.length?top5[0][1]:1;
+  document.getElementById('auditList').innerHTML=top5.length?top5.map(([t,v])=>`
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:3px;">
+        <span style="font-weight:600;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:75%;">${t}</span>
+        <span class="num" style="color:#ef4444;">${v}</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${((v/maxA)*100).toFixed(1)}%;background:#f87171;"></div></div>
+    </div>`).join(''):'<p style="color:#94a3b8;font-size:.8rem;">Nenhum dado.</p>';
+
   const def=data.filter(d=>(d['Tipo de Resolução']||'').trim()==='Resolvido Definitivo').length;
-  const pctDef=total>0?(def/total)*100:0;const ok=pctDef>=70;
-  document.getElementById('healthPanel').className=`rounded-2xl p-4 sm:p-5 shadow-sm border ${ok?'bg-emerald-50 border-emerald-200':'bg-red-50 border-red-200'}`;
-  document.getElementById('healthDot').className=`w-2 h-6 rounded-full ${ok?'bg-emerald-400':'bg-red-400'}`;
-  document.getElementById('healthTitle').className=`font-bold ${ok?'text-emerald-800':'text-red-800'}`;
+  const pctDef=total>0?(def/total)*100:0;
+  const ok=pctDef>=70;
+  const panel=document.getElementById('healthPanel');
+  panel.style.borderColor=ok?'#a7f3d0':'#fca5a5';
+  panel.style.background=ok?'#f0fdf4':'#fff5f5';
+  document.getElementById('healthDot').style.background=ok?'#10b981':'#ef4444';
   document.getElementById('healthTitle').textContent=ok?'Saúde Estrutural — Operação Saudável':'Saúde Estrutural — Atenção Crítica';
-  document.getElementById('healthPct').className=`text-lg font-bold mono ${ok?'text-emerald-700':'text-red-600'}`;
+  document.getElementById('healthTitle').style.color=ok?'#065f46':'#b91c1c';
   document.getElementById('healthPct').textContent=pctDef.toFixed(1)+'%';
-  const ring=document.getElementById('healthRing');ring.style.stroke=ok?'#10b981':'#ef4444';
+  document.getElementById('healthPct').style.color=ok?'#10b981':'#ef4444';
+  const ring=document.getElementById('healthRing');
+  ring.style.stroke=ok?'#10b981':'#ef4444';
   ring.style.strokeDashoffset=(251.2*(1-pctDef/100)).toFixed(2);
-  document.getElementById('healthLabel').className=`text-base font-bold ${ok?'text-emerald-700':'text-red-700'}`;
   document.getElementById('healthLabel').textContent=ok?'🎉 Excelente taxa de resolução!':'🚨 Investigar contornos e paliativos';
+  document.getElementById('healthLabel').style.color=ok?'#065f46':'#b91c1c';
   document.getElementById('healthMsg').textContent=ok
-    ?`Parabéns! ${pctDef.toFixed(1)}% dos tickets foram resolvidos definitivamente, superando os 70% recomendados.`
-    :`Apenas ${pctDef.toFixed(1)}% resolvidos definitivamente (abaixo de 70%). Priorize abertura de RCAs.`;
+    ?`Parabéns! ${pctDef.toFixed(1)}% dos tickets foram resolvidos definitivamente, superando os 70% recomendados. Continue monitorando!`
+    :`Apenas ${pctDef.toFixed(1)}% resolvidos definitivamente (abaixo de 70%). Priorize a abertura de RCAs para contornos e paliativos.`;
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  PROBLEMS
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 function renderProblems(){
   const data=filteredData;
+  // Top causas
   const causas={};data.forEach(d=>{const c=d['Causa']||'(Vazio)';causas[c]=(causas[c]||0)+1;});
-  const top5C=Object.entries(causas).sort((a,b)=>b[1]-a[1]).slice(0,5);const maxC=top5C.length?top5C[0][1]:1;
-  document.getElementById('topCausasList').innerHTML=top5C.map(([c,v])=>`<div><div class="flex justify-between text-xs mb-1"><span class="font-medium text-slate-700 truncate max-w-[200px]">${c}</span><span class="mono text-purple-600 font-bold">${v}</span></div><div class="relative h-2 bg-purple-50 rounded-full overflow-hidden"><div class="bar-fill absolute inset-y-0 left-0 bg-purple-400 rounded-full" style="width:${((v/maxC)*100).toFixed(1)}%"></div></div></div>`).join('')||'<p class="text-slate-400 text-sm">Sem dados.</p>';
+  const top5C=Object.entries(causas).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxC=top5C.length?top5C[0][1]:1;
+  document.getElementById('topCausasList').innerHTML=top5C.map(([c,v])=>`
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:3px;">
+        <span style="font-weight:600;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80%;">${c}</span>
+        <span class="num" style="color:#9333ea;">${v}</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${((v/maxC)*100).toFixed(1)}%;background:#a855f7;"></div></div>
+    </div>`).join('')||'<p style="color:#94a3b8;font-size:.8rem;">Sem dados.</p>';
+  // Top times
   const times={};data.forEach(d=>{const t=d['Time de Desenvolvimento']||'(Vazio)';times[t]=(times[t]||0)+1;});
-  const top5T=Object.entries(times).sort((a,b)=>b[1]-a[1]).slice(0,5);const maxT=top5T.length?top5T[0][1]:1;
-  document.getElementById('topTimesList').innerHTML=top5T.map(([t,v])=>`<div><div class="flex justify-between text-xs mb-1"><span class="font-medium text-slate-700 truncate max-w-[200px]">${t}</span><span class="mono text-indigo-600 font-bold">${v}</span></div><div class="relative h-2 bg-indigo-50 rounded-full overflow-hidden"><div class="bar-fill absolute inset-y-0 left-0 bg-indigo-400 rounded-full" style="width:${((v/maxT)*100).toFixed(1)}%"></div></div></div>`).join('')||'<p class="text-slate-400 text-sm">Sem dados.</p>';
+  const top5T=Object.entries(times).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxT=top5T.length?top5T[0][1]:1;
+  document.getElementById('topTimesList').innerHTML=top5T.map(([t,v])=>`
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:3px;">
+        <span style="font-weight:600;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80%;">${t}</span>
+        <span class="num" style="color:#4f46e5;">${v}</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${((v/maxT)*100).toFixed(1)}%;background:#6366f1;"></div></div>
+    </div>`).join('')||'<p style="color:#94a3b8;font-size:.8rem;">Sem dados.</p>';
+  // RCA table
   const rca=data.filter(d=>/contorno|n[aã]o resolvid/i.test(d['Tipo de Resolução']||''));
-  document.getElementById('rcaBody').innerHTML=rca.length
-    ?rca.map(d=>`<tr class="hover:bg-indigo-900">
-        <td class="px-3 py-2.5 text-xs mono text-indigo-300 font-semibold">${d['Fresh ID']||'-'}</td>
-        <td class="px-3 py-2.5 text-xs text-indigo-100 max-w-[200px]"><div class="truncate" title="${(d['Assunto']||'').replace(/"/g,'&quot;')}">${d['Assunto']||'-'}</div></td>
-        <td class="px-3 py-2.5 text-xs text-indigo-200 max-w-[140px] truncate hidden sm:table-cell">${d['Causa']||'-'}</td>
-        <td class="px-3 py-2.5 text-xs text-indigo-200 max-w-[140px] truncate hidden sm:table-cell">${d['Time de Desenvolvimento']||'-'}</td>
-        <td class="px-3 py-2.5 text-xs"><span class="badge bg-red-900 text-red-300">${d['Tipo de Resolução']||'(Vazio)'}</span></td>
-      </tr>`).join('')
-    :`<tr><td colspan="5" class="px-4 py-8 text-center text-indigo-300 text-sm">Nenhum candidato a RCA encontrado.</td></tr>`;
-  document.getElementById('btnExportRCA').onclick=()=>exportTicketsCSV('candidatos_rca.csv',rca);
+  document.getElementById('rcaBody').innerHTML=rca.length?rca.map(d=>`
+    <tr>
+      <td class="num" style="color:#818cf8;">${d['Fresh ID']||'-'}</td>
+      <td style="color:#c7d2fe;max-width:200px;"><div class="truncate" title="${(d['Assunto']||'').replace(/"/g,'&quot;')}">${d['Assunto']||'-'}</div></td>
+      <td style="color:#a5b4fc;"><div class="truncate">${d['Causa']||'-'}</div></td>
+      <td style="color:#a5b4fc;"><div class="truncate">${d['Time de Desenvolvimento']||'-'}</div></td>
+      <td><span class="badge badge-red">${d['Tipo de Resolução']||'(Vazio)'}</span></td>
+    </tr>`).join(''):`<tr><td colspan="5" style="text-align:center;color:#818cf8;padding:24px;">Nenhum candidato a RCA encontrado.</td></tr>`;
+  document.getElementById('btnExportRCA').onclick=()=>expTickets('candidatos_rca.csv',rca);
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  CSV EXPORT
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 const ALL_KEYS=['Fresh ID','Solução Aplicada','Causa','Tipo de Pedido','Time de Desenvolvimento','Tipo de Resolução','Nome da empresa','Estado','Prioridade','Data de criação','Assunto'];
-function exportTicketsCSV(filename,rows){
+function expTickets(filename,rows){
   if(!rows.length){alert('Nenhum dado para exportar.');return;}
   const keys=ALL_KEYS.filter(k=>k in rows[0]);
-  downloadCSV(filename,[keys.join(','),...rows.map(r=>keys.map(k=>`"${(r[k]||'').replace(/"/g,'""')}"`).join(','))].join('\n'));
+  dlCSV(filename,[keys.join(','),...rows.map(r=>keys.map(k=>`"${(r[k]||'').replace(/"/g,'""')}"`).join(','))].join('\n'));
 }
-function downloadCSV(filename,content){
+function dlCSV(filename,content){
   const blob=new Blob(['\uFEFF'+content],{type:'text/csv;charset=utf-8;'});
-  const url=URL.createObjectURL(blob);const a=document.createElement('a');
-  a.href=url;a.download=filename;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=filename;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
 }
 </script>
 </body>
