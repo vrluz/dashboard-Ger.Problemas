@@ -836,7 +836,7 @@ const pieLinesPlugin={
       const r=arc.outerRadius;const color=PIE_COLORS[i%PIE_COLORS.length];
       const ex=arc.x+Math.cos(mid)*r,ey=arc.y+Math.sin(mid)*r;
       const er=r+(mob?14:22);const elx=arc.x+Math.cos(mid)*er,ely=arc.y+Math.sin(mid)*er;
-      const off=Math.cos(mid)>0?(mob?26:36):-(mob?26:36);const tx=elx+off;
+      const off=Math.cos(mid)>0?(mob?30:42):-(mob?30:42);const tx=elx+off;
       ctx.beginPath();ctx.moveTo(ex,ey);ctx.lineTo(elx,ely);ctx.lineTo(tx,ely);
       ctx.strokeStyle=color+'aa';ctx.lineWidth=1.2;ctx.stroke();
       ctx.beginPath();ctx.arc(ex,ey,2.5,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
@@ -861,7 +861,7 @@ function renderDoughnut(){
     data:{labels,datasets:[{data:values,backgroundColor:PIE_COLORS.slice(0,labels.length),borderWidth:3,borderColor:'#ffffff',hoverBorderWidth:4}]},
     options:{
       cutout:'58%',responsive:true,maintainAspectRatio:false,
-      layout:{padding:mob?{top:20,bottom:10,left:70,right:16}:{top:40,bottom:40,left:120,right:80}},
+      layout:{padding:mob?{top:20,bottom:10,left:110,right:16}:{top:40,bottom:40,left:160,right:80}},
       plugins:{
         legend:{display:true,position:mob?'bottom':'right',labels:{font:{family:'Inter',size:mob?10:12},color:'#4a5e78',boxWidth:10,padding:mob?8:14,usePointStyle:true,pointStyleWidth:10}},
         datalabels:{display:false},
