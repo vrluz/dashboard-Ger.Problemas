@@ -362,6 +362,32 @@ tr:hover td{background:var(--surface2);}
 /* ── FADE ── */
 .fade-in{animation:fadeIn .3s ease both;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── PDF BTN ── */
+.pdf-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:.7rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  background:var(--brand);color:#fff;
+  border:none;border-radius:8px;
+  padding:6px 14px;cursor:pointer;transition:all .2s;
+}
+.pdf-btn:hover{background:var(--brand-mid);}
+.pdf-btn svg{width:13px;height:13px;}
+
+/* ── PRINT ── */
+@media print{
+  .hdr,.filter-bar,.kpi-grid,.tabs-nav,.pdf-btn,.exp-btn{display:none!important;}
+  body{background:#fff;}
+  .tabs-wrap{border:none;box-shadow:none;}
+  .tab-section{display:none!important;}
+  .tab-section.print-active{display:block!important;padding:0;}
+  .tbl-wrap,.listing-wrap{max-height:none!important;overflow:visible!important;}
+  .rca-panel{background:#f1f5f9!important;border-radius:8px;}
+  .rca-panel th{background:#e2e8f0!important;color:#334155!important;}
+  .rca-panel td{color:#334155!important;border-bottom:1px solid #e2e8f0!important;}
+  .rca-panel td:first-child{color:var(--brand)!important;}
+  a{color:inherit!important;text-decoration:none!important;}
+}
 </style>
 </head>
 <body>
@@ -437,7 +463,13 @@ tr:hover td{background:var(--surface2);}
 
       <!-- ABA 1 -->
       <div class="tab-section active fade-in" id="sec-0">
-        <div class="sec-title">Eficácia de Resolução</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+          <div class="sec-title" style="margin:0;flex:1;">Eficácia de Resolução</div>
+          <button class="pdf-btn" onclick="printTab(0)">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            Gerar PDF
+          </button>
+        </div>
         <div style="display:flex;justify-content:center;">
           <div style="position:relative;width:100%;max-width:580px;height:420px;">
             <canvas id="chartDoughnut"></canvas>
@@ -447,7 +479,13 @@ tr:hover td{background:var(--surface2);}
 
       <!-- ABA 2 -->
       <div class="tab-section fade-in" id="sec-1">
-        <div class="sec-title">Matrizes de Tabulação Cruzada</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+          <div class="sec-title" style="margin:0;flex:1;">Matrizes de Tabulação Cruzada</div>
+          <button class="pdf-btn" onclick="printTab(1)">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            Gerar PDF
+          </button>
+        </div>
         <div id="matricesContainer" style="display:flex;flex-direction:column;gap:24px;"></div>
       </div>
 
@@ -455,6 +493,11 @@ tr:hover td{background:var(--surface2);}
       <div class="tab-section fade-in" id="sec-2">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
           <div class="sec-title" style="margin:0;flex:1;">Top 20 Assuntos Reincidentes</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="pdf-btn" onclick="printTab(2)">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            Gerar PDF
+          </button>
           <button class="exp-btn" id="btnExportTop20">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             Exportar Top 20
@@ -467,15 +510,21 @@ tr:hover td{background:var(--surface2);}
       <div class="tab-section fade-in" id="sec-3">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
           <div class="sec-title" style="margin:0;flex:1;">Listagem de Tickets</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="pdf-btn" onclick="printTab(3)">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            Gerar PDF
+          </button>
           <button class="exp-btn" id="btnExportListing">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             Exportar Listagem
           </button>
+          </div>
         </div>
         <div class="listing-wrap">
           <table>
             <thead><tr>
-              <th>Fresh ID</th><th>Time</th><th>Causa</th><th>Assunto</th><th>Resolução</th>
+              <th>Fresh ID</th><th>Jira</th><th>Time</th><th>Causa</th><th>Assunto</th><th>Resolução</th>
             </tr></thead>
             <tbody id="listingBody"></tbody>
           </table>
@@ -484,7 +533,13 @@ tr:hover td{background:var(--surface2);}
 
       <!-- ABA 5 -->
       <div class="tab-section fade-in" id="sec-4">
-        <div class="sec-title">Painel ITIL — Auditoria &amp; Saúde</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+          <div class="sec-title" style="margin:0;flex:1;">Painel ITIL — Auditoria &amp; Saúde</div>
+          <button class="pdf-btn" onclick="printTab(4)">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            Gerar PDF
+          </button>
+        </div>
         <div class="grid2">
           <div class="panel-card">
             <div class="panel-hdr">
@@ -520,7 +575,13 @@ tr:hover td{background:var(--surface2);}
 
       <!-- ABA 6 -->
       <div class="tab-section fade-in" id="sec-5">
-        <div class="sec-title">Abertura de Problemas — Candidatos a RCA</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+          <div class="sec-title" style="margin:0;flex:1;">Abertura de Problemas — Candidatos a RCA</div>
+          <button class="pdf-btn" onclick="printTab(5)">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            Gerar PDF
+          </button>
+        </div>
         <div class="grid2" style="margin-bottom:16px;">
           <div class="panel-card">
             <div class="panel-hdr">
@@ -551,11 +612,12 @@ tr:hover td{background:var(--surface2);}
           <div style="overflow:auto;max-height:360px;border-radius:10px;border:1px solid rgba(255,255,255,.08);">
             <table>
               <thead><tr>
-                <th style="background:rgba(255,255,255,.06);color:rgba(255,255,255,.45);">Fresh ID</th>
-                <th style="background:rgba(255,255,255,.06);color:rgba(255,255,255,.45);">Assunto</th>
-                <th style="background:rgba(255,255,255,.06);color:rgba(255,255,255,.45);">Causa</th>
-                <th style="background:rgba(255,255,255,.06);color:rgba(255,255,255,.45);">Time Responsável</th>
-                <th style="background:rgba(255,255,255,.06);color:rgba(255,255,255,.45);">Resolução Atual</th>
+                <th style="background:#1a2e5a;color:rgba(255,255,255,.55);position:sticky;top:0;z-index:10;">Fresh ID</th>
+                <th style="background:#1a2e5a;color:rgba(255,255,255,.55);position:sticky;top:0;z-index:10;">Jira</th>
+                <th style="background:#1a2e5a;color:rgba(255,255,255,.55);position:sticky;top:0;z-index:10;">Assunto</th>
+                <th style="background:#1a2e5a;color:rgba(255,255,255,.55);position:sticky;top:0;z-index:10;">Causa</th>
+                <th style="background:#1a2e5a;color:rgba(255,255,255,.55);position:sticky;top:0;z-index:10;">Time Responsável</th>
+                <th style="background:#1a2e5a;color:rgba(255,255,255,.55);position:sticky;top:0;z-index:10;">Resolução Atual</th>
               </tr></thead>
               <tbody id="rcaBody"></tbody>
             </table>
@@ -605,7 +667,7 @@ function parseCSV(text){
   }
   return rows;
 }
-const HMAP={'id do pedido':'Fresh ID','solucao aplicada':'Solução Aplicada','solução aplicada':'Solução Aplicada','causa':'Causa','tipo de pedido':'Tipo de Pedido','time desenvolvimento':'Time de Desenvolvimento','time de desenvolvimento':'Time de Desenvolvimento','tipo de resolucao':'Tipo de Resolução','tipo de resolução':'Tipo de Resolução','nome da empresa':'Nome da empresa','estado':'Estado','prioridade':'Prioridade','data de criacao':'Data de criação','data de criação':'Data de criação','assunto':'Assunto'};
+const HMAP={'id do pedido':'Fresh ID','solucao aplicada':'Solução Aplicada','solução aplicada':'Solução Aplicada','causa':'Causa','tipo de pedido':'Tipo de Pedido','time desenvolvimento':'Time de Desenvolvimento','time de desenvolvimento':'Time de Desenvolvimento','tipo de resolucao':'Tipo de Resolução','tipo de resolução':'Tipo de Resolução','nome da empresa':'Nome da empresa','estado':'Estado','prioridade':'Prioridade','data de criacao':'Data de criação','data de criação':'Data de criação','assunto':'Assunto','jira':'Jira','ticket jira':'Jira','id jira':'Jira','jira ticket':'Jira','numero jira':'Jira','número jira':'Jira'};
 function nh(h){return h.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();}
 function mapHeaders(raw){return raw.map(h=>{const n=nh(h);if(HMAP[n])return HMAP[n];for(const[k,v]of Object.entries(HMAP))if(n.startsWith(k))return v;return h;});}
 function processCSV(text){
@@ -1010,14 +1072,21 @@ function resBadge(val){
   return`<span class="badge" style="background:${bg};color:${txt};">${val||'(Vazio)'}</span>`;
 }
 function renderListing(){
-  document.getElementById('listingBody').innerHTML=filteredData.map(d=>`
-    <tr>
-      <td class="num" style="color:var(--brand-lite);">${d['Fresh ID']||'-'}</td>
+  const FD_BASE='https://softplan7189029973484399.freshdesk.com/a/tickets/';
+  const JIRA_BASE='https://gruposoftplan.atlassian.net/browse/';
+  document.getElementById('listingBody').innerHTML=filteredData.map(d=>{
+    const fid=d['Fresh ID']||'';
+    const jid=d['Jira']||'';
+    const fdLink=fid&&fid!=='(Vazio)'?`<a href="${FD_BASE}${fid}" target="_blank" style="color:var(--brand-lite);text-decoration:underline;text-underline-offset:2px;" title="Abrir no Freshdesk">${fid}</a>`:`<span style="color:var(--text3);">-</span>`;
+    const jiraLink=jid&&jid!=='(Vazio)'?`<a href="${JIRA_BASE}${jid}" target="_blank" style="color:var(--purple);text-decoration:underline;text-underline-offset:2px;" title="Abrir no Jira">${jid}</a>`:`<span style="color:var(--text3);">-</span>`;
+    return`<tr>
+      <td class="num">${fdLink}</td>
+      <td class="num">${jiraLink}</td>
       <td><div class="truncate">${d['Time de Desenvolvimento']||'-'}</div></td>
       <td><div class="truncate">${d['Causa']||'-'}</div></td>
       <td><div class="truncate" style="max-width:240px;" title="${(d['Assunto']||'').replace(/"/g,'&quot;')}">${d['Assunto']||'-'}</div></td>
       <td>${resBadge(d['Tipo de Resolução'])}</td>
-    </tr>`).join('');
+    </tr>`;}).join('');
   document.getElementById('btnExportListing').onclick=()=>expTickets('listagem_filtrada.csv',filteredData);
 }
 
@@ -1085,21 +1154,69 @@ function renderProblems(){
     </div>`).join('')||'<p style="color:var(--text3);font-size:.78rem;">Sem dados.</p>';
 
   const rca=data.filter(d=>/contorno|n[aã]o resolvid/i.test(d['Tipo de Resolução']||''));
-  document.getElementById('rcaBody').innerHTML=rca.length?rca.map(d=>`
-    <tr>
-      <td class="num">${d['Fresh ID']||'-'}</td>
-      <td><div class="truncate" style="max-width:200px;" title="${(d['Assunto']||'').replace(/"/g,'&quot;')}">${d['Assunto']||'-'}</div></td>
+  const FD_BASE2='https://softplan7189029973484399.freshdesk.com/a/tickets/';
+  const JIRA_BASE2='https://gruposoftplan.atlassian.net/browse/';
+  document.getElementById('rcaBody').innerHTML=rca.length?rca.map(d=>{
+    const fid=d['Fresh ID']||'';
+    const jid=d['Jira']||'';
+    const fdLink=fid&&fid!=='(Vazio)'?`<a href="${FD_BASE2}${fid}" target="_blank" style="color:#93c5fd;text-decoration:underline;text-underline-offset:2px;" title="Abrir no Freshdesk">${fid}</a>`:`<span style="color:rgba(255,255,255,.3);">-</span>`;
+    const jiraLink=jid&&jid!=='(Vazio)'?`<a href="${JIRA_BASE2}${jid}" target="_blank" style="color:#c4b5fd;text-decoration:underline;text-underline-offset:2px;" title="Abrir no Jira">${jid}</a>`:`<span style="color:rgba(255,255,255,.3);">-</span>`;
+    return`<tr>
+      <td class="num">${fdLink}</td>
+      <td class="num">${jiraLink}</td>
+      <td><div class="truncate" style="max-width:180px;" title="${(d['Assunto']||'').replace(/"/g,'&quot;')}">${d['Assunto']||'-'}</div></td>
       <td style="color:rgba(255,255,255,.6);"><div class="truncate">${d['Causa']||'-'}</div></td>
       <td style="color:rgba(255,255,255,.6);"><div class="truncate">${d['Time de Desenvolvimento']||'-'}</div></td>
       <td><span class="badge" style="background:rgba(239,68,68,.2);color:#fca5a5;">${d['Tipo de Resolução']||'(Vazio)'}</span></td>
-    </tr>`).join(''):`<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,.3);padding:28px;font-size:.8rem;">Nenhum candidato a RCA nos filtros atuais.</td></tr>`;
+    </tr>`;}).join(''):`<tr><td colspan="6" style="text-align:center;color:rgba(255,255,255,.3);padding:28px;font-size:.8rem;">Nenhum candidato a RCA nos filtros atuais.</td></tr>`;
   document.getElementById('btnExportRCA').onclick=()=>expTickets('candidatos_rca.csv',rca);
+}
+
+// ═══════════════════════════════
+//  PDF / PRINT
+// ═══════════════════════════════
+function printTab(idx){
+  // Mark which section to print
+  document.querySelectorAll('.tab-section').forEach((s,i)=>{
+    s.classList.toggle('print-active', i===idx);
+  });
+  window.print();
+  // Restore after print dialog closes
+  setTimeout(()=>{
+    document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('print-active'));
+  }, 1000);
+}
+
+// ═══════════════════════════════
+//  PDF / PRINT
+// ═══════════════════════════════
+function printTab(idx){
+  document.querySelectorAll('.tab-section').forEach((s,i)=>{
+    s.classList.toggle('print-active', i===idx);
+  });
+  window.print();
+  setTimeout(()=>{
+    document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('print-active'));
+  }, 1500);
 }
 
 // ═══════════════════════════════
 //  CSV EXPORT
 // ═══════════════════════════════
-const ALL_KEYS=['Fresh ID','Solução Aplicada','Causa','Tipo de Pedido','Time de Desenvolvimento','Tipo de Resolução','Nome da empresa','Estado','Prioridade','Data de criação','Assunto'];
+// ═══════════════════════════════
+//  PDF / PRINT
+// ═══════════════════════════════
+function printTab(idx){
+  document.querySelectorAll('.tab-section').forEach((s,i)=>{
+    s.classList.toggle('print-active', i===idx);
+  });
+  window.print();
+  setTimeout(()=>{
+    document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('print-active'));
+  }, 1500);
+}
+
+const ALL_KEYS=['Fresh ID','Jira','Solução Aplicada','Causa','Tipo de Pedido','Time de Desenvolvimento','Tipo de Resolução','Nome da empresa','Estado','Prioridade','Data de criação','Assunto'];
 function expTickets(filename,rows){
   if(!rows.length){alert('Nenhum dado para exportar.');return;}
   const keys=ALL_KEYS.filter(k=>k in rows[0]);
