@@ -470,11 +470,37 @@ tr:hover td{background:var(--surface2);}
             Gerar PDF
           </button>
         </div>
-        <div style="display:flex;justify-content:center;">
-          <div style="position:relative;width:100%;max-width:580px;height:420px;">
+        <!-- Gráfico 1: Eficácia de Resolução -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:28px;">
+          <div id="chartDoughnutWrap" style="position:relative;width:100%;height:280px;">
             <canvas id="chartDoughnut"></canvas>
           </div>
         </div>
+
+        <!-- Gráficos 2 e 3: Causa e Solução Aplicada -->
+        <div style="display:grid;grid-template-columns:1fr;gap:24px;" id="extraChartsGrid">
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;">
+            <div style="font-size:.72rem;font-weight:600;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+              Top Causas
+              <span style="flex:1;height:1px;background:var(--border);display:block;"></span>
+            </div>
+            <div style="position:relative;width:100%;height:340px;">
+              <canvas id="chartCausa"></canvas>
+            </div>
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;">
+            <div style="font-size:.72rem;font-weight:600;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+              Solução Aplicada
+              <span style="flex:1;height:1px;background:var(--border);display:block;"></span>
+            </div>
+            <div style="position:relative;width:100%;height:340px;">
+              <canvas id="chartSolucao"></canvas>
+            </div>
+          </div>
+        </div>
+        <style>
+          @media(min-width:900px){#extraChartsGrid{grid-template-columns:1fr 1fr;}}
+        </style>
       </div>
 
       <!-- ABA 2 -->
@@ -646,7 +672,7 @@ const DROPDOWN_DEFS=[
   {key:'Estado',                  label:'Status'},
 ];
 
-let allData=[],filteredData=[],doughnutChart=null;
+let allData=[],filteredData=[],doughnutChart=null,chartCausa=null,chartSolucao=null;
 let ddSel={},ddSearch={};
 
 // ═══════════════════════════════
@@ -668,8 +694,8 @@ function parseCSV(text){
   }
   return rows;
 }
-const HMAP={'id do pedido':'Fresh ID','solucao aplicada':'Solução Aplicada','solução aplicada':'Solução Aplicada','causa':'Causa','tipo de pedido':'Tipo de Pedido','time desenvolvimento':'Time de Desenvolvimento','time de desenvolvimento':'Time de Desenvolvimento','tipo de resolucao':'Tipo de Resolução','tipo de resolução':'Tipo de Resolução','nome da empresa':'Nome da empresa','estado':'Estado','prioridade':'Prioridade','data de criacao':'Data de criação','data de criação':'Data de criação','assunto':'Assunto','jira':'Jira','ticket jira':'Jira','id jira':'Jira','jira ticket':'Jira','numero jira':'Jira','número jira':'Jira'};
-function nh(h){return h.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();}
+const HMAP={'id do pedido':'Fresh ID','id do pedido de suporte':'Fresh ID','solucao aplicada':'Solução Aplicada','solução aplicada':'Solução Aplicada','solucao  aplicada':'Solução Aplicada','solução  aplicada':'Solução Aplicada','causa':'Causa','tipo de pedido':'Tipo de Pedido','tipo de pedido de suporte':'Tipo de Pedido','time desenvolvimento':'Time de Desenvolvimento','time de desenvolvimento':'Time de Desenvolvimento','tipo de resolucao':'Tipo de Resolução','tipo de resolução':'Tipo de Resolução','nome da empresa':'Nome da empresa','estado':'Estado','prioridade':'Prioridade','data de criacao':'Data de criação','data de criação':'Data de criação','assunto':'Assunto','jira':'Jira','jira key':'Jira','ticket jira':'Jira','id jira':'Jira','jira ticket':'Jira','numero jira':'Jira','número jira':'Jira'};
+function nh(h){return h.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();}
 function mapHeaders(raw){return raw.map(h=>{const n=nh(h);if(HMAP[n])return HMAP[n];for(const[k,v]of Object.entries(HMAP))if(n.startsWith(k))return v;return h;});}
 function processCSV(text){
   if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
@@ -913,50 +939,222 @@ Chart.register(pieLinesPlugin);
 
 function renderDoughnut(){
   const counts={};
-  filteredData.forEach(d=>{const r=(d['Tipo de Resolução']||'(Vazio)').trim();counts[r]=(counts[r]||0)+1;});
-  const labels=Object.keys(counts),values=labels.map(l=>counts[l]);
+  filteredData.forEach(d=>{const r=(d['Tipo de Resolução']||'(Vazio)').trim();if(r)counts[r]=(counts[r]||0)+1;});
+  // Sort descending by value
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const labels=sorted.map(([l])=>l);
+  const values=sorted.map(([,v])=>v);
+  const total=values.reduce((a,b)=>a+b,0);
   const canvas=document.getElementById('chartDoughnut');
   if(doughnutChart){doughnutChart.destroy();doughnutChart=null;}
-  if(!canvas)return;
-  const mob=window.innerWidth<640;
-  const total=values.reduce((a,b)=>a+b,0);
+  if(!canvas){renderExtraCharts();return;}
 
-  // Calcula o padding esquerdo dinamicamente baseado no maior texto
-  const fontSize=mob?9:10.5;
-  const charWidth=fontSize*0.62;
-  let maxLeftText=0;
-  labels.forEach((lbl,i)=>{
-    const val=values[i];if(!val||val/total<0.03)return;
-    const pct=((val/total)*100).toFixed(1);
-    const txt=`${lbl} - ${val} (${pct}%)`;
-    const textPx=txt.length*charWidth;
-    if(textPx>maxLeftText)maxLeftText=textPx;
-  });
-  const dynLeft=mob?Math.max(90,maxLeftText+20):Math.max(140,maxLeftText+24);
-  const dynRight=mob?16:80;
+  // Dynamic height: 52px per bar, min 200px
+  const wrap=document.getElementById('chartDoughnutWrap');
+  const barH=Math.max(200, labels.length*52);
+  if(wrap)wrap.style.height=barH+'px';
 
   doughnutChart=new Chart(canvas,{
-    type:'doughnut',
-    data:{labels,datasets:[{data:values,backgroundColor:PIE_COLORS.slice(0,labels.length),borderWidth:3,borderColor:'#ffffff',hoverBorderWidth:4}]},
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{
+        data:values,
+        backgroundColor:PIE_COLORS.slice(0,labels.length).map(c=>c+'dd'),
+        borderColor:PIE_COLORS.slice(0,labels.length),
+        borderWidth:1.5,
+        borderRadius:6,
+        borderSkipped:false,
+      }]
+    },
     options:{
-      cutout:'58%',responsive:true,maintainAspectRatio:false,
-      layout:{padding:mob?{top:20,bottom:10,left:dynLeft,right:dynRight}:{top:40,bottom:40,left:dynLeft,right:dynRight}},
+      indexAxis:'y',
+      responsive:true,
+      maintainAspectRatio:false,
+      layout:{padding:{top:6,bottom:6,left:6,right:70}},
+      scales:{
+        x:{
+          grid:{color:'rgba(0,0,0,.05)'},
+          ticks:{font:{family:'IBM Plex Mono',size:10},color:'#8fa3bf'},
+          border:{display:false},
+        },
+        y:{
+          grid:{display:false},
+          ticks:{
+            font:{family:'Inter',size:12,weight:'500'},
+            color:'#1a3a5c',
+            crossAlign:'far',
+            // Never truncate labels
+            callback:function(val){return this.getLabelForValue(val);}
+          },
+          border:{display:false},
+        }
+      },
       plugins:{
-        legend:{display:true,position:mob?'bottom':'right',labels:{font:{family:'Inter',size:mob?10:12},color:'#4a5e78',boxWidth:10,padding:mob?8:14,usePointStyle:true,pointStyleWidth:10}},
-        datalabels:{display:false},
+        legend:{display:false},
+        datalabels:{
+          display:true,
+          anchor:'end',
+          align:'end',
+          formatter:(v)=>{
+            const p=total>0?((v/total)*100).toFixed(1):'0';
+            return v+' ('+p+'%)';
+          },
+          font:{family:'IBM Plex Mono',size:10,weight:'600'},
+          color:'#4a5e78',
+        },
         tooltip:{
           backgroundColor:'#ffffff',borderColor:'#e4e9f0',borderWidth:1,
-          titleColor:'#0f1c2e',bodyColor:'#4a5e78',
-          padding:10,
-          callbacks:{label:ctx=>{const v=ctx.parsed,t=ctx.dataset.data.reduce((a,b)=>a+b,0);return` ${v} tickets (${((v/t)*100).toFixed(1)}%)`;}}
+          titleColor:'#0f1c2e',bodyColor:'#4a5e78',padding:10,
+          callbacks:{
+            label:ctx=>{
+              const v=ctx.parsed.x;
+              const p=total>0?((v/total)*100).toFixed(1):'0';
+              return ' '+v+' tickets ('+p+'%)';
+            }
+          }
         }
       }
     },
     plugins:[ChartDataLabels]
   });
+  // render companion charts
+  renderExtraCharts();
 }
 
 // ═══════════════════════════════
+//  BAR CHARTS (CAUSA / SOLUÇÃO)
+// ═══════════════════════════════
+function renderBarChart(canvasId, chartRef, fieldKey, title, color){
+  const counts={};
+  filteredData.forEach(d=>{
+    const v=(d[fieldKey]||'(Vazio)').trim();
+    counts[v]=(counts[v]||0)+1;
+  });
+  // Sort descending, take top 12
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  const labels=sorted.map(([l])=>l);
+  const values=sorted.map(([,v])=>v);
+  const total=values.reduce((a,b)=>a+b,0);
+
+  const canvas=document.getElementById(canvasId);
+  if(chartRef){chartRef.destroy();chartRef=null;}
+  if(!canvas)return null;
+
+  // Truncate long labels for display
+  const displayLabels=labels.map(l=>l.length>28?l.slice(0,26)+'…':l);
+
+  const chart=new Chart(canvas,{
+    type:'bar',
+    data:{
+      labels:displayLabels,
+      datasets:[{
+        data:values,
+        backgroundColor:color+'cc',
+        borderColor:color,
+        borderWidth:1.5,
+        borderRadius:5,
+        borderSkipped:false,
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      responsive:true,
+      maintainAspectRatio:false,
+      layout:{padding:{top:4,bottom:4,left:4,right:48}},
+      scales:{
+        x:{
+          grid:{color:'rgba(0,0,0,.05)'},
+          ticks:{font:{family:'IBM Plex Mono',size:10},color:'#8fa3bf'},
+          border:{display:false},
+        },
+        y:{
+          grid:{display:false},
+          ticks:{
+            font:{family:'Inter',size:11},
+            color:'#4a5e78',
+            crossAlign:'far',
+          },
+          border:{display:false},
+        }
+      },
+      plugins:{
+        legend:{display:false},
+        datalabels:{
+          display:true,
+          anchor:'end',
+          align:'end',
+          formatter:(v)=>{const p=total>0?((v/total)*100).toFixed(1):'0';return`${v} (${p}%)`;},
+          font:{family:'IBM Plex Mono',size:9,weight:'600'},
+          color:'#4a5e78',
+        },
+        tooltip:{
+          backgroundColor:'#ffffff',borderColor:'#e4e9f0',borderWidth:1,
+          titleColor:'#0f1c2e',bodyColor:'#4a5e78',padding:10,
+          callbacks:{
+            title:ctx=>labels[ctx[0].dataIndex],
+            label:ctx=>{const v=ctx.parsed.x;const p=total>0?((v/total)*100).toFixed(1):'0';return` ${v} tickets (${p}%)`;},
+          }
+        }
+      }
+    },
+    plugins:[ChartDataLabels]
+  });
+  return chart;
+}
+
+function renderExtraCharts(){
+  chartCausa   = renderBarChart('chartCausa',   chartCausa,   'Causa',            'Top Causas',       '#7c3aed');
+  chartSolucao = renderBarChart('chartSolucao', chartSolucao, 'Solução Aplicada', 'Solução Aplicada', '#2563a8');
+}
+
+// ═══════════════════════════════
+//  BAR CHARTS (CAUSA / SOLUÇÃO)
+// ═══════════════════════════════
+function renderBarChart(canvasId,oldChart,fieldKey,color){
+  const counts={};
+  filteredData.forEach(d=>{const v=(d[fieldKey]||'').trim();if(v&&v!=='(Vazio)')counts[v]=(counts[v]||0)+1;});
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  const labels=sorted.map(([l])=>l);
+  const values=sorted.map(([,v])=>v);
+  const total=values.reduce((a,b)=>a+b,0);
+  const canvas=document.getElementById(canvasId);
+  if(oldChart){oldChart.destroy();}
+  if(!canvas)return null;
+  if(!sorted.length){
+    const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.font='13px Inter,sans-serif';ctx.fillStyle='#8fa3bf';ctx.textAlign='center';
+    ctx.fillText('Nenhum dado disponível',canvas.width/2,canvas.height/2);
+    return null;
+  }
+  const dispLabels=labels.map(l=>l.length>30?l.slice(0,28)+'…':l);
+  return new Chart(canvas,{
+    type:'bar',
+    data:{labels:dispLabels,datasets:[{data:values,backgroundColor:color+'bb',borderColor:color,borderWidth:1.5,borderRadius:5,borderSkipped:false}]},
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      layout:{padding:{top:4,bottom:4,left:4,right:52}},
+      scales:{
+        x:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{family:'IBM Plex Mono',size:10},color:'#8fa3bf'},border:{display:false}},
+        y:{grid:{display:false},ticks:{font:{family:'Inter',size:11},color:'#4a5e78',crossAlign:'far'},border:{display:false}}
+      },
+      plugins:{
+        legend:{display:false},
+        datalabels:{display:true,anchor:'end',align:'end',
+          formatter:(v)=>{const p=total>0?((v/total)*100).toFixed(1):'0';return v+' ('+p+'%)';},
+          font:{family:'IBM Plex Mono',size:9,weight:'600'},color:'#4a5e78'},
+        tooltip:{backgroundColor:'#ffffff',borderColor:'#e4e9f0',borderWidth:1,titleColor:'#0f1c2e',bodyColor:'#4a5e78',padding:10,
+          callbacks:{title:ctx=>labels[ctx[0].dataIndex],label:ctx=>{const v=ctx.parsed.x,p=total>0?((v/total)*100).toFixed(1):'0';return' '+v+' tickets ('+p+'%)';}}}
+      }
+    },
+    plugins:[ChartDataLabels]
+  });
+}
+function renderExtraCharts(){
+  chartCausa=renderBarChart('chartCausa',chartCausa,'Causa','#7c3aed');
+  chartSolucao=renderBarChart('chartSolucao',chartSolucao,'Solução Aplicada','#2563a8');
+}
+
 //  MATRICES
 // ═══════════════════════════════
 function buildCT(data,rk,ck){
